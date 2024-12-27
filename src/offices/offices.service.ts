@@ -31,7 +31,7 @@ export class OfficesService {
     return this.officeModel.find().lean().exec();
   }
 
-  async findOne(id: string): Promise<Office> {
+  async findOne(id: string) {
     const office = await this.officeModel.findById(id).lean().exec();
     if (!office) {
       throw new NotFoundException(`Office with id ${id} not found`);

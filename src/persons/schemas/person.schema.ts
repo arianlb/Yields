@@ -11,7 +11,7 @@ export class Person {
   @Prop()
   phone: number;
 
-  @Prop({ required: true })
+  @Prop({ type: Date, required: true })
   since: Date;
 
   @Prop()

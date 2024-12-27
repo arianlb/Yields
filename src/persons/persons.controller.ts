@@ -6,11 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PersonsService } from './persons.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
+import { SearchTermDto } from './dto/search-term.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
 
 @ApiTags('Persons')
@@ -24,8 +26,8 @@ export class PersonsController {
   }
 
   @Get()
-  findAll() {
-    return this.personsService.findAll();
+  findAll(@Query() searchTermDto: SearchTermDto) {
+    return this.personsService.findAll(searchTermDto);
   }
 
   @Get(':id')

@@ -14,6 +14,6 @@ import { OfficesModule } from '../offices/offices.module';
     forwardRef(() => AuthModule),
     OfficesModule,
   ],
-  exports: [MongooseModule],
+  exports: [MongooseModule, UsersService],
 })
 export class UsersModule {}
