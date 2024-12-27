@@ -10,5 +10,6 @@ import { Office, OfficeSchema } from './schemas/office.schema';
   imports: [
     MongooseModule.forFeature([{ name: Office.name, schema: OfficeSchema }]),
   ],
+  exports: [OfficesService],
 })
 export class OfficesModule {}

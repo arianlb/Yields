@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
+import { Office } from '../../offices/schemas/office.schema';
 
 @Schema()
 export class User {
@@ -9,7 +10,7 @@ export class User {
   @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, select: false })
   password: string;
 
   @Prop({ default: true })
@@ -21,11 +22,8 @@ export class User {
   })
   roles: string[];
 
-  @Prop({
-    type: [Number],
-    required: true,
-  })
-  sebandas: number[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Office' }] })
+  offices: Office[];
 }
 
 export type UserDocument = HydratedDocument<User>;

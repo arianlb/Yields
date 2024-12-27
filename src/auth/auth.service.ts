@@ -26,11 +26,13 @@ export class AuthService {
     }*/
     const user = await this.userModel
       .findOne({ email: username })
+      .select('+password')
       .lean()
       .exec();
     if (!user || !bcrypt.compareSync(password, user.password)) {
       throw new UnauthorizedException('Credentials are not valid');
     }
+    delete user.password;
     return {
       token: this.generateJWT({ uid: user._id }),
       user,

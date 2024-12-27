@@ -12,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './schemas/user.schema';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { OfficesService } from '../offices/offices.service';
 
 @Injectable()
 export class UsersService {
@@ -19,9 +20,15 @@ export class UsersService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    private readonly officesSeervice: OfficesService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    const searchesPromises = [];
+    createUserDto.offices.forEach(officeId => {
+      searchesPromises.push(this.officesSeervice.findOne(officeId));
+    });
+    await Promise.all(searchesPromises);
     try {
       createUserDto.password = bcrypt.hashSync(createUserDto.password, 10);
       return this.userModel.create(createUserDto);
@@ -58,7 +65,7 @@ export class UsersService {
 
   async update(
     id: string,
-    { password, ...restUser }: UpdateUserDto,
+    { password, offices, ...restUser }: UpdateUserDto,
   ): Promise<User> {
     try {
       const user = this.userModel
@@ -74,12 +81,16 @@ export class UsersService {
     }
   }
 
-  async remove(id: string): Promise<string> {
-    const user = await this.userModel.findByIdAndDelete(id).lean().exec();
+  async addOffice(id: string, officeId: string): Promise<User> {
+    const [user, office] = await Promise.all([
+      this.userModel.findById(id).exec(),
+      this.officesSeervice.findOne(officeId),
+    ]);
     if (!user) {
-      throw new NotFoundException(`User with id: '${id}' not found`);
+      throw new NotFoundException(`User with id ${id} not found`);
     }
-    return `User with the id: '${id}' was removed`;
+    user.offices.push(office);
+    return user.save();
   }
 
   private handelDBException(error: any): never {

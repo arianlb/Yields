@@ -3,9 +3,8 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
-  IsInt,
+  IsMongoId,
   IsOptional,
-  IsPositive,
   IsString,
   MaxLength,
   MinLength,
@@ -32,13 +31,10 @@ export class CreateUserDto {
   @IsBoolean()
   readonly isActive?: boolean;
 
-  @ApiProperty({
-    type: [Number]
-  })
+  @ApiProperty()
   @IsArray()
-  @IsInt({ each: true })
-  @IsPositive({ each: true })
-  readonly sebandas: number[];
+  @IsMongoId({ each: true })
+  readonly offices: string[];
 
   @ApiProperty()
   @IsArray()

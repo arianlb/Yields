@@ -2,14 +2,15 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { User } from '../../users/schemas/user.schema';
 import { Person } from '../../persons/schemas/person.schema';
+import { Office } from '../../offices/schemas/office.schema';
 
 @Schema()
 export class Policy {
   @Prop()
   policyNumber: string;
 
-  @Prop()
-  sebanda: number;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Office' })
+  office: Office;
 
   @Prop()
   effectiveDate: Date;

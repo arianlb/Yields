@@ -33,9 +33,8 @@ export class CreatePersonDto {
   readonly source?: string;
 
   @ApiProperty()
-  @IsInt()
-  @IsPositive()
-  readonly sebanda: number;
+  @IsMongoId()
+  readonly office: string;
 
   @ApiProperty()
   @IsOptional()

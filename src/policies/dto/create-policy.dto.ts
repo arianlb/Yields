@@ -15,9 +15,8 @@ export class CreatePolicyDto {
   readonly policyNumber: string;
 
   @ApiProperty()
-  @IsInt()
-  @IsPositive()
-  readonly sebanda: number;
+  @IsMongoId()
+  readonly office: string;
 
   @ApiProperty()
   @IsDate()

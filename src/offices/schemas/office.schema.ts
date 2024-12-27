@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
-import { User } from 'src/users/schemas/user.schema';
+import { HydratedDocument } from 'mongoose';
 
 @Schema()
 export class Office {
@@ -12,9 +11,6 @@ export class Office {
 
   @Prop({ type: [String] })
   sources: string[];
-
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
-  agents: User[];
 }
 
 export type OfficeDocument = HydratedDocument<Office>;

@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { User } from '../../users/schemas/user.schema';
+import { Office } from '../../offices/schemas/office.schema';
 
 @Schema()
 export class Person {
@@ -16,8 +17,8 @@ export class Person {
   @Prop()
   source: string;
 
-  @Prop()
-  sebanda: number;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Office' })
+  office: Office;
 
   @Prop({ default: false })
   isCustomer: boolean;
