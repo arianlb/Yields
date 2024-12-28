@@ -5,13 +5,13 @@ import { JwtService } from '@nestjs/jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { LoginUserDto } from './dto/login-user.dto';
-import { JwtPayload } from "./interfaces/jwt-payload.interface";
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
   async login({ username, password }: LoginUserDto) {
@@ -41,7 +41,7 @@ export class AuthService {
 
   async checkAuthStatus(user: UserDocument) {
     return {
-      token: this.generateJWT({ uid: user._id })
+      token: this.generateJWT({ uid: user._id }),
     };
   }
 

@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
 export interface JwtPayload {
-    uid: Types.ObjectId;
+  uid: Types.ObjectId;
 }

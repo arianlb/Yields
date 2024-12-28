@@ -19,7 +19,7 @@ export class AuthController {
 
   @Get('check')
   @Auth()
-  check(@GetUser() user: UserDocument ) {
+  check(@GetUser() user: UserDocument) {
     return this.authService.checkAuthStatus(user);
   }
 }

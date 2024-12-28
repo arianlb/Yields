@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsDate,
-  IsInt,
   IsMongoId,
   IsPositive,
   IsString,
@@ -14,15 +14,23 @@ export class CreatePolicyDto {
   @MinLength(2)
   readonly policyNumber: string;
 
-  @ApiProperty()
-  @IsMongoId()
-  readonly office: string;
-
-  @ApiProperty()
+  @ApiProperty({
+    description: 'The start date in YYYY-MM-DD format',
+    type: String,
+    format: 'date',
+    example: '2024-12-26',
+  })
+  @Type(() => Date)
   @IsDate()
   readonly effectiveDate: Date;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'The start date in YYYY-MM-DD format',
+    type: String,
+    format: 'date',
+    example: '2024-12-26',
+  })
+  @Type(() => Date)
   @IsDate()
   readonly expirationDate: Date;
 

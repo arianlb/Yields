@@ -12,7 +12,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { PersonsService } from './persons.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
-import { SearchTermDto } from './dto/search-term.dto';
+import { SearchCriteriaDto } from './dto/search-criteria.dto';
+import { DateSearchDto } from '../common/dto/date-search.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
 
 @ApiTags('Persons')
@@ -25,9 +26,17 @@ export class PersonsController {
     return this.personsService.create(createPersonDto);
   }
 
+  @Get('office/:officeId')
+  findAll(
+    @Param('officeId', ParseMongoIdPipe) officeId: string,
+    @Query() dateSearchDto: DateSearchDto,
+  ) {
+    return this.personsService.findAll(officeId, dateSearchDto);
+  }
+
   @Get()
-  findAll(@Query() searchTermDto: SearchTermDto) {
-    return this.personsService.findAll(searchTermDto);
+  findByQuery(@Query() searchCriteriaDto: SearchCriteriaDto) {
+    return this.personsService.findByQuery(searchCriteriaDto);
   }
 
   @Get(':id')

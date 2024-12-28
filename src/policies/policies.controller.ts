@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PoliciesService } from './policies.service';
 import { CreatePolicyDto } from './dto/create-policy.dto';
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
+import { DateSearchDto } from '../common/dto/date-search.dto';
 
 @ApiTags('Policies')
 @Controller('policies')
@@ -23,14 +25,33 @@ export class PoliciesController {
     return this.policiesService.create(createPolicyDto);
   }
 
-  @Get()
-  findAll() {
-    return this.policiesService.findAll();
+  @Get('expiration-date/:officeId')
+  findByExpirationDate(
+    @Param('officeId', ParseMongoIdPipe) officeId: string,
+    @Query() dateSearchDto: DateSearchDto,
+  ) {
+    return this.policiesService.findByExpirationDate(officeId, dateSearchDto);
+  }
+
+  @Get('cancellation-date/:officeId')
+  findByCancellationDate(
+    @Param('officeId', ParseMongoIdPipe) officeId: string,
+    @Query() dateSearchDto: DateSearchDto,
+  ) {
+    return this.policiesService.findByCancellationDate(officeId, dateSearchDto);
   }
 
   @Get(':id')
   findOne(@Param('id', ParseMongoIdPipe) id: string) {
     return this.policiesService.findOne(id);
+  }
+
+  @Get(':officeId/policy-number/:policyNumber')
+  findByPolicyNumber(
+    @Param('officeId', ParseMongoIdPipe) officeId: string,
+    @Param('policyNumber') policyNumber: string,
+  ) {
+    return this.policiesService.findByPolicyNumber(officeId, policyNumber);
   }
 
   @Patch(':id')

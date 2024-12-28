@@ -1,9 +1,14 @@
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
-import { SearchTermDto } from './dto/search-term.dto';
+import { SearchCriteriaDto } from './dto/search-criteria.dto';
+import { DateSearchDto } from '../common/dto/date-search.dto';
 import { Person } from './schemas/person.schema';
 import { OfficesService } from '../offices/offices.service';
 import { UsersService } from '../users/users.service';
@@ -26,7 +31,7 @@ export class PersonsService {
     if (createPersonDto.agent) {
       const [user, office] = await Promise.all([
         this.usersService.findOne(createPersonDto.agent),
-        this.officesService.findOne(createPersonDto.office)
+        this.officesService.findOne(createPersonDto.office),
       ]);
       let flag = true;
       user.offices.forEach((officeId) => {
@@ -36,14 +41,17 @@ export class PersonsService {
       });
       if (flag) {
         throw new BadRequestException(
-          `User with id ${createPersonDto.agent} does not have access to office with id ${createPersonDto.office}`
+          `User with id ${createPersonDto.agent} does not have access to office with id ${createPersonDto.office}`,
         );
       }
       refOffice = office;
     } else {
       refOffice = await this.officesService.findOne(createPersonDto.office);
     }
-    if (createPersonDto.source && !refOffice.sources.includes(createPersonDto.source)) {
+    if (
+      createPersonDto.source &&
+      !refOffice.sources.includes(createPersonDto.source)
+    ) {
       throw new NotFoundException(
         `Office with id ${createPersonDto.office} does not have source ${createPersonDto.source}`,
       );
@@ -51,11 +59,19 @@ export class PersonsService {
     return this.personModel.create(createPersonDto);
   }
 
-  async findAll({startDate, endDate}: SearchTermDto): Promise<Person[]> {
+  async findAll(
+    officeId: string,
+    { startDate, endDate }: DateSearchDto,
+  ): Promise<Person[]> {
     return this.personModel
-      .find({ since: { $gte: startDate, $lte: endDate } })
+      .find({ office: officeId, since: { $gte: startDate, $lte: endDate } })
+      .sort({ since: 1 })
       .lean()
       .exec();
+  }
+
+  async findByQuery(searchCriteriaDto: SearchCriteriaDto): Promise<Person[]> {
+    return this.personModel.find(searchCriteriaDto).lean().exec();
   }
 
   async findOne(id: string): Promise<Person> {

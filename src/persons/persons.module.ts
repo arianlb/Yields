@@ -14,5 +14,6 @@ import { UsersModule } from '../users/users.module';
     OfficesModule,
     UsersModule,
   ],
+  exports: [PersonsService],
 })
 export class PersonsModule {}

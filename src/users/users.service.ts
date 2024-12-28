@@ -25,7 +25,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const searchesPromises = [];
-    createUserDto.offices.forEach(officeId => {
+    createUserDto.offices.forEach((officeId) => {
       searchesPromises.push(this.officesSeervice.findOne(officeId));
     });
     await Promise.all(searchesPromises);

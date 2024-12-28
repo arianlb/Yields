@@ -1,10 +1,27 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsDate, IsOptional } from 'class-validator';
+import { IsDate, IsMongoId, IsOptional, IsString } from 'class-validator';
 import { CreatePolicyDto } from './create-policy.dto';
+import { Type } from 'class-transformer';
 
 export class UpdatePolicyDto extends PartialType(CreatePolicyDto) {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'The start date in YYYY-MM-DD format',
+    type: String,
+    format: 'date',
+    example: '2024-12-26',
+  })
   @IsOptional()
+  @Type(() => Date)
   @IsDate()
   readonly cancellationDate?: Date;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsMongoId()
+  readonly renewalAgent?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  readonly note?: string;
 }

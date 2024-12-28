@@ -4,7 +4,7 @@ import { IsInt, IsOptional, IsPositive } from 'class-validator';
 
 export class PaginationDto {
   @ApiProperty({
-    default: 10
+    default: 10,
   })
   @IsOptional()
   @Type(() => Number)
@@ -13,7 +13,7 @@ export class PaginationDto {
   limit?: number;
 
   @ApiProperty({
-    default: 1
+    default: 1,
   })
   @IsOptional()
   @Type(() => Number)
