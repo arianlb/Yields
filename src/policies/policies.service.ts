@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePolicyDto } from './dto/create-policy.dto';
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,10 +18,23 @@ export class PoliciesService {
   ) {}
 
   async create(createPolicyDto: CreatePolicyDto): Promise<Policy> {
-    const [, person] = await Promise.all([
+    const [user, person] = await Promise.all([
       this.usersService.findOne(createPolicyDto.salesAgent),
       this.personsService.findOne(createPolicyDto.person),
     ]);
+
+    let flag = true;
+    user.offices.forEach((officeId) => {
+      if ((person.office as any).equals(officeId as any)) {
+        flag = false;
+      }
+    });
+    if (flag) {
+      throw new BadRequestException(
+        `User with id ${createPolicyDto.salesAgent} does not have access to office with id ${person.office}`,
+      );
+    }
+
     return this.policyModel.create({
       ...createPolicyDto,
       office: person.office,
