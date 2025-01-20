@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsDate,
   IsInt,
   IsMongoId,
@@ -51,4 +52,10 @@ export class CreatePersonDto {
   @IsOptional()
   @IsMongoId()
   readonly agent?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  readonly notes?: string[];
 }
