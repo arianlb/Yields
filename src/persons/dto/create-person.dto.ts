@@ -16,7 +16,7 @@ export class CreatePersonDto {
   @IsOptional()
   @IsString()
   @MinLength(2)
-  readonly name?: string;
+  name?: string;
 
   @ApiProperty()
   @IsOptional()

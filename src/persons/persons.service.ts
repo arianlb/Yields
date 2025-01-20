@@ -56,6 +56,9 @@ export class PersonsService {
         `Office with id ${createPersonDto.office} does not have source ${createPersonDto.source}`,
       );
     }
+    if (createPersonDto.name) {
+      createPersonDto.name = this.capitalizeFirstLetter(createPersonDto.name);
+    }
     return this.personModel.create(createPersonDto);
   }
 
@@ -83,6 +86,9 @@ export class PersonsService {
   }
 
   async update(id: string, updatePersonDto: UpdatePersonDto): Promise<Person> {
+    if (updatePersonDto.name) {
+      updatePersonDto.name = this.capitalizeFirstLetter(updatePersonDto.name);
+    }
     const person = this.personModel
       .findByIdAndUpdate(id, updatePersonDto, { new: true })
       .lean()
@@ -99,5 +105,10 @@ export class PersonsService {
       throw new NotFoundException(`Person with id: '${id}' not found`);
     }
     return `Person with the id: '${id}' was removed`;
+  }
+
+  private capitalizeFirstLetter(str: string): string {
+    str = str.toLowerCase();
+    return str.replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 }
