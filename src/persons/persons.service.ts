@@ -68,6 +68,7 @@ export class PersonsService {
   ): Promise<Person[]> {
     return this.personModel
       .find({ office: officeId, since: { $gte: startDate, $lte: endDate } })
+      .populate('agent', 'name')
       .sort({ since: 1 })
       .lean()
       .exec();
