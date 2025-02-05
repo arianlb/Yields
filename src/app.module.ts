@@ -7,6 +7,7 @@ import { OfficesModule } from './offices/offices.module';
 import { PoliciesModule } from './policies/policies.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
+import { WebSocketsModule } from './web-sockets/web-sockets.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './auth/auth.module';
     MongooseModule.forRoot(process.env.MONGODB_CNN),
     CommonModule,
     AuthModule,
+    WebSocketsModule,
   ],
 })
 export class AppModule {}
