@@ -10,4 +10,9 @@ export class WebSocketsGateway {
   handleChangePerson(client: Socket, payload: any) {
     client.broadcast.emit('change-person', payload);
   }
+  
+  @SubscribeMessage('change-policy')
+  handleChangePolicy(client: Socket, payload: any) {
+    client.broadcast.emit('change-policy', payload);
+  }
 }
