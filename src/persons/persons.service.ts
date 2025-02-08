@@ -100,12 +100,8 @@ export class PersonsService {
     return person;
   }
 
-  async remove(id: string): Promise<string> {
-    const person = await this.personModel.findByIdAndDelete(id).lean().exec();
-    if (!person) {
-      throw new NotFoundException(`Person with id: '${id}' not found`);
-    }
-    return `Person with the id: '${id}' was removed`;
+  async remove(id: string): Promise<Person> {
+    return this.personModel.findByIdAndDelete(id).lean().exec();
   }
 
   private capitalizeFirstLetter(str: string): string {
