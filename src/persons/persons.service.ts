@@ -101,7 +101,7 @@ export class PersonsService {
   }
 
   async remove(id: string): Promise<Person> {
-    return this.personModel.findByIdAndDelete(id).lean().exec();
+    return this.personModel.findByIdAndDelete(id).select('_id').lean().exec();
   }
 
   private capitalizeFirstLetter(str: string): string {
