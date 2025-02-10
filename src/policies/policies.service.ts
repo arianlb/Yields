@@ -60,7 +60,7 @@ export class PoliciesService {
         office: officeId,
         expirationDate: { $gte: startDate, $lte: endDate },
       })
-      .select('carrier premium expirationDate person renewalAgent')
+      .select('carrier premium expirationDate renewed note person renewalAgent')
       .populate('person', 'name phone')
       .populate('renewalAgent', 'name')
       .sort({ expirationDate: 1 })
