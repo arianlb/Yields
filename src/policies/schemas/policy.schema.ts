@@ -27,7 +27,7 @@ export class Policy {
   @Prop()
   premium: number;
 
-  @Prop()
+  @Prop({ default: false })
   renewed: boolean;
 
   @Prop()
