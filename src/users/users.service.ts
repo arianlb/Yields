@@ -51,7 +51,7 @@ export class UsersService {
       data: users,
       totalPages: Math.ceil(total / limit)
     }*/
-    return this.userModel.find().skip(skip).limit(limit).lean().exec();
+    return this.userModel.find().skip(skip).limit(limit).populate('offices', 'name').lean().exec();
     //Mirar este metodo que se puede optimizar y no subcribirse a dos promesas!!!!
   }
 
