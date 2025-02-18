@@ -28,10 +28,13 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Get()
+  @Get(':officeId')
   @Auth(ValidRoles.admin)
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.usersService.findAll(paginationDto);
+  findAll(
+    @Param('officeId', ParseMongoIdPipe) officeId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.usersService.findAll(officeId, paginationDto);
   }
 
   @Get(':id')

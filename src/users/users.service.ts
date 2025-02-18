@@ -37,7 +37,10 @@ export class UsersService {
     }
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<User[]> {
+  async findAll(
+    officeId: string,
+    paginationDto: PaginationDto,
+  ): Promise<User[]> {
     const { limit = 10, page = 1 } = paginationDto;
     const skip = (page - 1) * limit;
     /*const [users, total] = await Promise.all([
@@ -51,7 +54,13 @@ export class UsersService {
       data: users,
       totalPages: Math.ceil(total / limit)
     }*/
-    return this.userModel.find().skip(skip).limit(limit).populate('offices', 'name').lean().exec();
+    return this.userModel
+      .find({ offices: officeId })
+      /*.skip(skip)
+      .limit(limit)*/
+      .populate('offices', 'name')
+      .lean()
+      .exec();
     //Mirar este metodo que se puede optimizar y no subcribirse a dos promesas!!!!
   }
 
