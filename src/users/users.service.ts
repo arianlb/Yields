@@ -24,11 +24,7 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const searchesPromises = [];
-    createUserDto.offices.forEach((officeId) => {
-      searchesPromises.push(this.officesSeervice.findOne(officeId));
-    });
-    await Promise.all(searchesPromises);
+    await this.existOffices(createUserDto.offices);
     try {
       createUserDto.password = bcrypt.hashSync(createUserDto.password, 10);
       return this.userModel.create(createUserDto);
@@ -54,13 +50,15 @@ export class UsersService {
       data: users,
       totalPages: Math.ceil(total / limit)
     }*/
-    return this.userModel
-      .find({ offices: officeId })
-      /*.skip(skip)
+    return (
+      this.userModel
+        .find({ offices: officeId })
+        /*.skip(skip)
       .limit(limit)*/
-      .populate('offices', 'name')
-      .lean()
-      .exec();
+        .populate('offices', 'name')
+        .lean()
+        .exec()
+    );
     //Mirar este metodo que se puede optimizar y no subcribirse a dos promesas!!!!
   }
 
@@ -74,8 +72,15 @@ export class UsersService {
 
   async update(
     id: string,
-    { password, offices, ...restUser }: UpdateUserDto,
+    { password, ...restUser }: UpdateUserDto,
   ): Promise<User> {
+    if (restUser.offices) {
+      if (restUser.offices.length > 0){
+        await this.existOffices(restUser.offices);
+      } else {
+        delete restUser.offices;
+      }
+    }
     try {
       const user = this.userModel
         .findByIdAndUpdate(id, restUser, { new: true })
@@ -90,18 +95,6 @@ export class UsersService {
     }
   }
 
-  async addOffice(id: string, officeId: string): Promise<User> {
-    const [user, office] = await Promise.all([
-      this.userModel.findById(id).exec(),
-      this.officesSeervice.findOne(officeId),
-    ]);
-    if (!user) {
-      throw new NotFoundException(`User with id ${id} not found`);
-    }
-    user.offices.push(office);
-    return user.save();
-  }
-
   private handelDBException(error: any): never {
     if (error.code === 11000) {
       throw new BadRequestException(
@@ -112,5 +105,13 @@ export class UsersService {
     throw new InternalServerErrorException(
       'Unexpected error, check server logs',
     );
+  }
+
+  private async existOffices(offices: string[]): Promise<void> {
+    const searchesPromises = [];
+    offices.forEach((officeId) => {
+      searchesPromises.push(this.officesSeervice.findOne(officeId));
+    });
+    await Promise.all(searchesPromises);
   }
 }

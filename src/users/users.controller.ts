@@ -49,12 +49,4 @@ export class UsersController {
   ) {
     return this.usersService.update(id, updateUserDto);
   }
-
-  @Patch(':id/office/:officeId')
-  addOffice(
-    @Param('id', ParseMongoIdPipe) id: string,
-    @Param('officeId', ParseMongoIdPipe) officeId: string,
-  ) {
-    return this.usersService.addOffice(id, officeId);
-  }
 }
