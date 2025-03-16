@@ -27,7 +27,7 @@ export class AuthService {
     const user = await this.userModel
       .findOne({ email: username })
       .select('+password')
-      .populate('offices', 'name')
+      .populate('offices', 'name sources')
       .lean()
       .exec();
     if (!user || !bcrypt.compareSync(password, user.password)) {
