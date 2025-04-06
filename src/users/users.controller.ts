@@ -15,9 +15,6 @@ import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ValidRoles } from '../auth/interfaces/valid-roles';
-import { GetUser } from '../auth/decorators/get-user.decorator';
-import { UserDocument } from './schemas/user.schema';
-import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -50,14 +47,5 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.update(id, updateUserDto);
-  }
-  
-  @Patch('change/password')
-  @Auth()
-  changePassword(
-    @GetUser() user: UserDocument,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ) {
-    return this.usersService.changePassword(user, changePasswordDto);
   }
 }

@@ -10,8 +10,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { User, UserDocument } from './schemas/user.schema';
+import { User } from './schemas/user.schema';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { OfficesService } from '../offices/offices.service';
 
@@ -94,16 +93,6 @@ export class UsersService {
     } catch (error) {
       this.handelDBException(error);
     }
-  }
-
-  async changePassword({_id}: UserDocument, changePasswordDto: ChangePasswordDto): Promise<string> {
-    const user = await this.userModel.findById(_id).select('+password').exec();
-    if (!bcrypt.compareSync(changePasswordDto.currentPassword, user.password)) {
-      throw new BadRequestException('Current password is not valid');
-    }
-    user.password = bcrypt.hashSync(changePasswordDto.newPassword, 10);
-    await user.save();
-    return 'Password changed successfully';
   }
 
   private handelDBException(error: any): never {
