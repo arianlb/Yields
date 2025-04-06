@@ -75,7 +75,7 @@ export class UsersService {
     { password, ...restUser }: UpdateUserDto,
   ): Promise<User> {
     if (restUser.offices) {
-      if (restUser.offices.length > 0){
+      if (restUser.offices.length > 0) {
         await this.existOffices(restUser.offices);
       } else {
         delete restUser.offices;

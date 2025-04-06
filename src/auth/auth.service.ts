@@ -2,7 +2,11 @@ import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { EmailService } from './email/email.service';
 import { ChangePasswordDto, LoginUserDto } from './dto';
@@ -59,7 +63,10 @@ export class AuthService {
     return 'Email sent';
   }
 
-  async resetPassword({_id}: UserDocument, newPassword: string): Promise<string> {
+  async resetPassword(
+    { _id }: UserDocument,
+    newPassword: string,
+  ): Promise<string> {
     const user = await this.userModel.findById(_id).select('+password').exec();
     if (!user) {
       throw new BadRequestException('User not found');
@@ -69,7 +76,10 @@ export class AuthService {
     return 'Password reset successfully';
   }
 
-  async changePassword({_id}: UserDocument, changePasswordDto: ChangePasswordDto): Promise<string> {
+  async changePassword(
+    { _id }: UserDocument,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<string> {
     const user = await this.userModel.findById(_id).select('+password').exec();
     if (!bcrypt.compareSync(changePasswordDto.currentPassword, user.password)) {
       throw new BadRequestException('Current password is not valid');

@@ -4,8 +4,12 @@ import { AuthService } from './auth.service';
 import { Auth } from './decorators/auth.decorator';
 import { GetUser } from './decorators/get-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
-import { ChangePasswordDto, EmailUserDto, LoginUserDto, ResetPasswordDto } from './dto';
-
+import {
+  ChangePasswordDto,
+  EmailUserDto,
+  LoginUserDto,
+  ResetPasswordDto,
+} from './dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -29,7 +33,7 @@ export class AuthController {
   async forgotPassword(@Body() emailUserDto: EmailUserDto) {
     return this.authService.forgotPassword(emailUserDto.email);
   }
-  
+
   @Post('reset-password')
   @HttpCode(200)
   @Auth()
@@ -37,10 +41,7 @@ export class AuthController {
     @GetUser() user: UserDocument,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
-    return this.authService.resetPassword(
-      user,
-      resetPasswordDto.newPassword,
-    );
+    return this.authService.resetPassword(user, resetPasswordDto.newPassword);
   }
   @Post('change-password')
   @HttpCode(200)
@@ -49,9 +50,6 @@ export class AuthController {
     @GetUser() user: UserDocument,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    return this.authService.changePassword(
-      user,
-      changePasswordDto
-    );
+    return this.authService.changePassword(user, changePasswordDto);
   }
 }
