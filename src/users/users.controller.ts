@@ -27,7 +27,7 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Get(':officeId')
+  @Get('office/:officeId')
   @Auth(ValidRoles.admin)
   findAll(
     @Param('officeId', ParseMongoIdPipe) officeId: string,
