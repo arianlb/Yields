@@ -14,8 +14,10 @@ import { CreatePolicyDto } from './dto/create-policy.dto';
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
 import { DateSearchDto } from '../common/dto/date-search.dto';
+import { Auth } from '../auth/decorators/auth.decorator';
 
 @ApiTags('Policies')
+@Auth()
 @Controller('policies')
 export class PoliciesController {
   constructor(private readonly policiesService: PoliciesService) {}

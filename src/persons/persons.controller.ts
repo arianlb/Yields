@@ -15,8 +15,10 @@ import { UpdatePersonDto } from './dto/update-person.dto';
 import { SearchCriteriaDto } from './dto/search-criteria.dto';
 import { DateSearchDto } from '../common/dto/date-search.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
+import { Auth } from '../auth/decorators/auth.decorator';
 
 @ApiTags('Persons')
+@Auth()
 @Controller('persons')
 export class PersonsController {
   constructor(private readonly personsService: PersonsService) {}

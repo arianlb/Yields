@@ -18,6 +18,7 @@ import { ValidRoles } from '../auth/interfaces/valid-roles';
 
 @ApiTags('Users')
 @ApiBearerAuth()
+@Auth(ValidRoles.admin)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -28,7 +29,6 @@ export class UsersController {
   }
 
   @Get('office/:officeId')
-  @Auth(ValidRoles.admin)
   findAll(
     @Param('officeId', ParseMongoIdPipe) officeId: string,
     @Query() paginationDto: PaginationDto,

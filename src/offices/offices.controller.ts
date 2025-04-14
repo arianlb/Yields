@@ -12,8 +12,11 @@ import { OfficesService } from './offices.service';
 import { CreateOfficeDto } from './dto/create-office.dto';
 import { UpdateOfficeDto } from './dto/update-office.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { ValidRoles } from '../auth/interfaces/valid-roles';
 
 @ApiTags('Offices')
+@Auth(ValidRoles.admin)
 @Controller('offices')
 export class OfficesController {
   constructor(private readonly officesService: OfficesService) {}
