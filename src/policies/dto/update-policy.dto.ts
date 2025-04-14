@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsDate, IsMongoId, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDate, IsMongoId, IsOptional, IsString } from 'class-validator';
 import { CreatePolicyDto } from './create-policy.dto';
 import { Type } from 'class-transformer';
 
@@ -22,6 +22,7 @@ export class UpdatePolicyDto extends PartialType(CreatePolicyDto) {
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
-  readonly note?: string;
+  @IsArray()
+  @IsString({ each: true })
+  readonly notes?: string[];
 }

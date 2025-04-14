@@ -30,8 +30,8 @@ export class Policy {
   @Prop({ default: false })
   renewed: boolean;
 
-  @Prop()
-  note: string;
+  @Prop({ type: [String] })
+  notes: string[];
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   salesAgent: User;
