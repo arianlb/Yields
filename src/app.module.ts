@@ -8,6 +8,7 @@ import { PoliciesModule } from './policies/policies.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { WebSocketsModule } from './web-sockets/web-sockets.module';
+import { QqcatalystModule } from './qqcatalyst/qqcatalyst.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { WebSocketsModule } from './web-sockets/web-sockets.module';
     CommonModule,
     AuthModule,
     WebSocketsModule,
+    QqcatalystModule,
   ],
 })
 export class AppModule {}
