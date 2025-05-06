@@ -65,7 +65,7 @@ export class PoliciesService {
         expirationDate: { $gte: startDate, $lte: endDate },
         cancellationDate: null,
       })
-      .select('policyNumber carrier premium expirationDate renewed notes person renewalAgent')
+      .select('policyNumber carrier premium expirationDate renewed status notes person renewalAgent')
       .populate('person', 'name phone')
       .populate('renewalAgent', 'name')
       .sort({ expirationDate: 1 })

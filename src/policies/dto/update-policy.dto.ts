@@ -25,4 +25,9 @@ export class UpdatePolicyDto extends PartialType(CreatePolicyDto) {
   @IsArray()
   @IsString({ each: true })
   readonly notes?: string[];
+  
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  readonly status?: string;
 }
