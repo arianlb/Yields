@@ -4,12 +4,10 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter;
   private readonly clientId = process.env.EMAIL_CLIENT_ID;
   private readonly clientSecret = process.env.EMAIL_CLIENT_SECRET;
   private readonly tenantId = process.env.EMAIL_TENANT_ID;
@@ -19,33 +17,53 @@ export class EmailService {
 
   async sendEmail(to: string, url: string): Promise<void> {
     const accessToken = await this.refreshAccessToken();
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.office365.com',
-      port: 587,
-      secure: false,
-      auth: {
-        type: 'OAuth2',
-        user: this.userEmail,
-        clientId: this.clientId,
-        clientSecret: this.clientSecret,
-        accessToken,
+    const mailData = {
+      message: {
+        subject: 'Reset Your Password',
+        body: {
+          contentType: 'HTML',
+          content: `
+            <h1>Reset Your Password</h1>
+            <p>Click the link below to reset your password:</p>
+            <a href="${url}">Reset Password</a>
+            <p>If you did not request this, please ignore this email.</p>
+          `,
+        },
+        toRecipients: [
+          {
+            emailAddress: {
+              address: to,
+            },
+          },
+        ],
       },
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to,
-      subject: 'Reset Your Password',
-      html: `
-                <h1>Reset Your Password</h1>
-                <p>Click the link below to reset your password:</p>
-                <a href="${url}">Reset Password</a>
-                <p>If you did not request this, please ignore this email.</p>
-                `,
     };
 
+
+    // const mailOptions = {
+    //   from: process.env.EMAIL_USER,
+    //   to,
+    //   subject: 'Reset Your Password',
+    //   html: `
+    //             <h1>Reset Your Password</h1>
+    //             <p>Click the link below to reset your password:</p>
+    //             <a href="${url}">Reset Password</a>
+    //             <p>If you did not request this, please ignore this email.</p>
+    //             `,
+    // };
+
     try {
-      await this.transporter.sendMail(mailOptions);
+      await this.httpService.axiosRef.post(
+        `https://graph.microsoft.com/v1.0/users/${this.userEmail}/sendMail`,
+        mailData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      this.logger.log(`Email sent to ${to}`);
     } catch (error) {
       this.logger.error('Error sending email', error);
       throw new InternalServerErrorException('Error sending email');
@@ -56,10 +74,8 @@ export class EmailService {
     const params = new URLSearchParams();
     params.append('client_id', this.clientId);
     params.append('client_secret', this.clientSecret);
-    params.append('grant_type', 'password');
-    params.append('scope', 'https://outlook.office365.com/.default');
-    params.append('username', this.userEmail);
-    params.append('password', 'Sebanda#89.it');
+    params.append('grant_type', 'client_credentials');
+    params.append('scope', 'https://graph.microsoft.com/.default');
     try {
       const response = await this.httpService.axiosRef.post(
         `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/token`,
