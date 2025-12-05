@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsInt,
+  IsOptional,
   IsPositive,
   IsString,
   MinLength,
@@ -22,4 +23,9 @@ export class CreateOfficeDto {
   @IsArray()
   @IsString({ each: true })
   readonly sources: string[];
+
+  @ApiProperty()
+  @IsOptional()
+  @IsInt()
+  readonly qqOfficeId?: number;
 }

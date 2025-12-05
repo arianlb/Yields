@@ -2,7 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDate,
+  IsInt,
   IsMongoId,
+  IsOptional,
   IsPositive,
   IsString,
   MinLength,
@@ -50,4 +52,9 @@ export class CreatePolicyDto {
   @ApiProperty()
   @IsMongoId()
   readonly person: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsInt()
+  readonly qqPolicyId?: number;
 }

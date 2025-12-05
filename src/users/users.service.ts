@@ -33,7 +33,11 @@ export class UsersService {
     }
   }
 
-  async findAll(
+  async findAll() {
+    return this.userModel.find().lean().exec();
+  }
+
+  async findAllByOffice(
     officeId: string,
     paginationDto: PaginationDto,
   ): Promise<User[]> {

@@ -28,6 +28,9 @@ export class Person {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   agent: User;
+
+  @Prop()
+  qqPersonId: number;
 }
 
 export type PersonDocument = HydratedDocument<Person>;

@@ -58,4 +58,9 @@ export class CreatePersonDto {
   @IsArray()
   @IsString({ each: true })
   readonly notes?: string[];
+
+  @ApiProperty()
+  @IsOptional()
+  @IsInt()
+  readonly qqPersonId?: number;
 }

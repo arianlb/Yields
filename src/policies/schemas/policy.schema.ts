@@ -44,6 +44,9 @@ export class Policy {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Person' })
   person: Person;
+
+  @Prop()
+  qqPolicyId: number;
 }
 
 export type PolicyDocument = HydratedDocument<Policy>;

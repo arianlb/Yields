@@ -26,4 +26,11 @@ export class SearchCriteriaDto {
   @IsInt()
   @IsPositive()
   readonly phone?: number;
+  
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
+  readonly qqPersonId?: number;
 }

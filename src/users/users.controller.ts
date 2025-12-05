@@ -33,7 +33,7 @@ export class UsersController {
     @Param('officeId', ParseMongoIdPipe) officeId: string,
     @Query() paginationDto: PaginationDto,
   ) {
-    return this.usersService.findAll(officeId, paginationDto);
+    return this.usersService.findAllByOffice(officeId, paginationDto);
   }
 
   @Get(':id')

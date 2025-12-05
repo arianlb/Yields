@@ -3,6 +3,7 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
+  IsInt,
   IsMongoId,
   IsOptional,
   IsString,
@@ -40,4 +41,9 @@ export class CreateUserDto {
   @IsArray()
   @IsString({ each: true })
   readonly roles: string[];
+
+  @ApiProperty()
+  @IsOptional()
+  @IsInt()
+  readonly qqUserId?: number;
 }

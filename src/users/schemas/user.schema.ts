@@ -24,6 +24,9 @@ export class User {
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Office' }] })
   offices: Office[];
+
+  @Prop()
+  qqUserId: number;
 }
 
 export type UserDocument = HydratedDocument<User>;

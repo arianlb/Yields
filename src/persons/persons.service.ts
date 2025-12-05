@@ -74,7 +74,7 @@ export class PersonsService {
       .exec();
   }
 
-  async findByQuery(searchCriteriaDto: SearchCriteriaDto): Promise<Person[]> {
+  async findByQuery(searchCriteriaDto: SearchCriteriaDto) {
     return this.personModel.find(searchCriteriaDto).lean().exec();
   }
 

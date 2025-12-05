@@ -27,7 +27,7 @@ export class OfficesService {
     }
   }
 
-  async findAll(): Promise<Office[]> {
+  async findAll() {
     return this.officeModel.find().lean().exec();
   }
 

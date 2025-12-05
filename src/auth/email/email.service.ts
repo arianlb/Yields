@@ -39,19 +39,6 @@ export class EmailService {
       },
     };
 
-
-    // const mailOptions = {
-    //   from: process.env.EMAIL_USER,
-    //   to,
-    //   subject: 'Reset Your Password',
-    //   html: `
-    //             <h1>Reset Your Password</h1>
-    //             <p>Click the link below to reset your password:</p>
-    //             <a href="${url}">Reset Password</a>
-    //             <p>If you did not request this, please ignore this email.</p>
-    //             `,
-    // };
-
     try {
       await this.httpService.axiosRef.post(
         `https://graph.microsoft.com/v1.0/users/${this.userEmail}/sendMail`,

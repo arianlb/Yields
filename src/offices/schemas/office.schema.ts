@@ -11,6 +11,9 @@ export class Office {
 
   @Prop({ type: [String] })
   sources: string[];
+
+  @Prop()
+  qqOfficeId: number;
 }
 
 export type OfficeDocument = HydratedDocument<Office>;
