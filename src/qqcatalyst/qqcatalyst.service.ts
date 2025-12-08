@@ -184,15 +184,13 @@ export class QqcatalystService {
     const response: ContactResponse[] = [];
     for (const contact of contacts) {
       if (i < this.contactCacheList.length && this.contactCacheList[i].EntityID === contact.EntityID) {
-        if (this.contactCacheList[i].DateLastModified !== contact.DateLastModified && contact.Status !== 'D') {
+        if (this.contactCacheList[i].DateLastModified !== contact.DateLastModified && (contact.ContactSubType === 'C' || contact.ContactSubType === 'P')) {
           response.push(contact);
         }
         i++;
       }
-      else {
-        if (contact.Status !== 'D') {
-          response.push(contact);
-        }
+      else if (contact.ContactSubType === 'C' || contact.ContactSubType === 'P') {
+        response.push(contact);
       }
     }
     this.contactCacheList = contacts;
@@ -217,6 +215,7 @@ export class QqcatalystService {
       notes: (await this.getContactNotes(contact.EntityID)).Data.map(note => note.Comment),
       agent: users.find(user => user.name === contact.AgentName)?._id,  //Esta buscando por nombre, hay que cambiarlo para que busque por qqUserId!!
       qqPersonId: contact.EntityID,
+      status: contact.Status,
     }));
     return await Promise.all(preparedData);
   }
@@ -239,6 +238,8 @@ export class QqcatalystService {
       return "Call";
     case "WhatsApp":
       return "WhatsApp";
+    case "Trust":
+      return "Trust";
 
     default:
       return "";
@@ -255,9 +256,14 @@ export class QqcatalystService {
       try {
         const existingPerson = await this.personsService.findByQuery({ office: personDto.office , qqPersonId: personDto.qqPersonId });
         if (existingPerson.length > 0) {
-          await this.personsService.update(existingPerson[0]._id.toString(), personDto);
+          if (personDto.status === 'D') {
+            this.personsService.remove(existingPerson[0]._id.toString());
+          }
+          else {
+            await this.personsService.update(existingPerson[0]._id.toString(), personDto);
+          }
         }
-        else {
+        else if (personDto.status !== 'D') {
           await this.personsService.create(personDto);
         }
       } catch (error) {
