@@ -171,7 +171,6 @@ export class QqcatalystService {
 
   async dataProcessing({ startDate, endDate }: QqDateSearchDto) {
     await this.checkAccessToken();
-    // const testDate = new Date().getTimezoneOffset(); te da la diferencia en minutos con UTC
     const { TotalItems } = await this.getContactsLastModifiedCreated(startDate, endDate, 1);
     const contactResponse = await this.getContactsLastModifiedCreated(startDate, endDate, TotalItems);
     const firstStep = this.cleanContactData(contactResponse.Data);
@@ -208,7 +207,7 @@ export class QqcatalystService {
     const preparedData = contacts.map(async (contact) => ({
       name: contact.DisplayName,
       phone: contact.Phone,
-      since: contact.CreatedOn, // revisar este campo con la zona horaria
+      since: new Date(new Date(contact.CreatedOn).getTime() - new Date().getTimezoneOffset() * 60 * 1000 * 2), // Ajuste de zona horaria
       source: await this.getSource(contact.EntityID),
       office: offices.find(office => office.qqOfficeId === contact.LocationID)?._id,
       isCustomer: (contact.ContactSubType === 'C')? await this.isCustomer(contact.EntityID) : false,
@@ -277,9 +276,21 @@ export class QqcatalystService {
   //   name: 'dailyQQCatalystTask',
   //   timeZone: 'America/New_York',
   // })
-  // async handleDailyTask() {
-  //   this.logger.log('Executing daily QQCatalyst task');
+  // async handleFiveMinuteTask() {
+  //   this.logger.log('Executing every 5 minutes QQCatalyst task');
   //   const todayDate = new Date().toISOString().substring(0,10);
   //   await this.dataProcessing({ startDate: todayDate, endDate: todayDate });
+  // }
+  
+  // @Cron('0 59 23 * * *', {
+  //   name: 'dailyQQCatalystTask',
+  //   timeZone: 'America/New_York',
+  // })
+  // async handleDailyTask() {
+  //   this.logger.log('Executing midnight daily QQCatalyst task');
+  //   const todayDate = new Date().toISOString().substring(0,10);
+  //   this.contactCacheList = [];
+  //   await this.dataProcessing({ startDate: todayDate, endDate: todayDate });
+  //   this.contactCacheList = [];
   // }
 }
