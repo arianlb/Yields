@@ -28,4 +28,9 @@ export class CreateOfficeDto {
   @IsOptional()
   @IsInt()
   readonly qqOfficeId?: number;
+  
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  readonly QQID?: string;
 }

@@ -31,6 +31,10 @@ export class OfficesService {
     return this.officeModel.find().lean().exec();
   }
 
+  async findByQQID(QQID: string) {
+    return this.officeModel.find({ QQID }).lean().exec();
+  }
+
   async findOne(id: string) {
     const office = await this.officeModel.findById(id).lean().exec();
     if (!office) {

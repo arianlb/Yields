@@ -22,6 +22,8 @@ export class QqcatalystService {
   private readonly apiURL = 'https://api.qqcatalyst.com/v1/';
   private accessToken: string | null = null;
   private contactCacheList: ContactResponse[] = [];
+  private offices = [];
+  private users = [];
 
   constructor(
     private readonly httpService: HttpService,
@@ -76,9 +78,25 @@ export class QqcatalystService {
     }
   }
 
-  async getContactsLastModifiedCreated( startDate: string, endDate: string, pageSize = 1 ): Promise<ContactsListResponse> {
-    // const todayDate = new Date().toISOString().substring(0,10);
+  async getLocationsInfo() {
+    const headers = {
+      Authorization: `Bearer ${this.accessToken}`,
+      'Content-Type': 'application/json',
+    };
 
+    try {
+      const url = `${this.apiURL}Locations/UserLocationsV2`;
+      const response = await this.httpService.axiosRef.get(url, { headers });
+      return response.data;
+    } catch (error) {
+      this.logger.error('Error fetching  from QQCatalyst:', error);
+      throw new InternalServerErrorException(
+        'Error fetching data from QQCatalyst',
+      );
+    }
+  }
+  
+  async getContactsLastModifiedCreated( startDate: string, endDate: string, pageSize = 1 ): Promise<ContactsListResponse> {
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
@@ -86,7 +104,6 @@ export class QqcatalystService {
 
     try {
       const url = `${this.apiURL}Contacts/LastModifiedCreated?startDate=${startDate}&endDate=${endDate}&pageSize=${pageSize}`;
-      // const url = `${this.apiURL}BusinessLogic/Ping`;
       const response = await this.httpService.axiosRef.get(url, { headers });
       return response.data;
     } catch (error) {
@@ -198,33 +215,67 @@ export class QqcatalystService {
 
   //Devuelve un DTO de persona listo para ser guardado en la base de datos
   private async prepareContactData(contacts: ContactResponse[]) {
-    //Obtener los id de oficina y agente desde la base de datos
-    const [offices, users] = await Promise.all([
-      this.officesService.findAll(),
-      this.usersService.findAll(),
-    ]);
+    if (this.offices.length === 0) {
+      this.offices = await this.getOffices();
+    }
+    if (this.users.length === 0) {
+      this.users = await this.getUsersByOffice(this.offices);
+    }
     
     const preparedData = contacts.map(async (contact) => ({
       name: contact.DisplayName,
       phone: contact.Phone,
       since: new Date(new Date(contact.CreatedOn).getTime() - new Date().getTimezoneOffset() * 60 * 1000 * 2), // Ajuste de zona horaria
-      source: await this.getSource(contact.EntityID),
-      office: offices.find(office => office.qqOfficeId === contact.LocationID)?._id,
+      source: await this.getSource(contact.EntityID, contact.LocationID),
+      office: this.offices.find(office => office.qqOfficeId === contact.LocationID)?._id,
       isCustomer: (contact.ContactSubType === 'C')? await this.isCustomer(contact.EntityID) : false,
       notes: (await this.getContactNotes(contact.EntityID)).Data.map(note => note.Comment),
-      agent: users.find(user => user.name === contact.AgentName)?._id,  //Esta buscando por nombre, hay que cambiarlo para que busque por qqUserId!!
+      agent: this.users.find(user => user.name === contact.AgentName)?._id,  //Esta buscando por nombre, hay que cambiarlo para que busque por qqUserId!!
       qqPersonId: contact.EntityID,
       status: contact.Status,
     }));
     return await Promise.all(preparedData);
   }
 
-  // ESTE METODO TENGO QUE CAMBIARLO!!!!
-  private async getSource(entityId: number) {
+  private async getOffices() {
+    const data = await this.getLocationsInfo();
+    const offices = [];
+    for (const location of data) {
+      const office = await this.officesService.findByQQID(location.QQID);
+      offices.push(office.pop());
+    }
+    return offices;
+  }
+
+  private async getUsersByOffice(offices: any[]) {
+    let usersResult = [];
+    for (const office of offices) {
+      const users = await this.usersService.findAllByOffice(office._id, { limit: 10, page: 1 });
+      if (usersResult.length > 0) {
+        usersResult = this.mergeUsersByEmail(usersResult, users);
+      } else {
+        usersResult = users;
+      }
+    }
+    return usersResult;
+  }
+
+  private mergeUsersByEmail(users1: any[], users2: any[]) {
+    const combined = [...users1, ...users2];
+    const map = new Map();
+    for (const user of combined) {
+      map.set(user.email, user);
+    }
+    return Array.from(map.values());
+  }
+
+  private async getSource(entityId: number, locationId: number): Promise<string> {
     const { CustomerSource } = await this.getContactInfo(entityId);
+    const office = this.offices.find(office => office.qqOfficeId === locationId);
+    if (office && office.sources.includes(CustomerSource)) {
+      return CustomerSource;
+    }
     switch (CustomerSource) {
-    case "Referral":
-      return "Referral";
     case "Facebook":
       return "Referral";
     case "Walk In":
@@ -235,10 +286,6 @@ export class QqcatalystService {
       return "Email";
     case "Social Media Call":
       return "Call";
-    case "WhatsApp":
-      return "WhatsApp";
-    case "Trust":
-      return "Trust";
 
     default:
       return "";
@@ -272,25 +319,48 @@ export class QqcatalystService {
     return 'Data processing completed';
   }
 
+  private todayInTimeZone(tz: string, extraDays: number): string {
+    const today = new Date();
+    today.setUTCDate(today.getUTCDate() + extraDays);
+    // 'en-CA' da formato YYYY-MM-DD sin librerías externas
+    return today.toLocaleDateString('en-CA', { timeZone: tz });
+  }
+
+  // @Cron('0 58 7 * * 1-6', {
+  //   name: 'preWorkQQCatalystTask',
+  //   timeZone: 'America/New_York',
+  // })
+  // async handlePreWorkTask() {
+  //   this.logger.log('Executing pre-work QQCatalyst task');
+  //   await this.checkAccessToken();
+  //   this.offices = await this.getOffices();
+  //   this.users = await this.getUsersByOffice(this.offices);
+  // }
+
   // @Cron('0 */5 8-18 * * 1-6', {
-  //   name: 'dailyQQCatalystTask',
+  //   name: 'fiveMinutesQQCatalystTask',
   //   timeZone: 'America/New_York',
   // })
   // async handleFiveMinuteTask() {
   //   this.logger.log('Executing every 5 minutes QQCatalyst task');
-  //   const todayDate = new Date().toISOString().substring(0,10);
-  //   await this.dataProcessing({ startDate: todayDate, endDate: todayDate });
+  //   const startDate = this.todayInTimeZone('America/New_York', 0);
+  //   const endDate = this.todayInTimeZone('Etc/UTC', 1);
+  //   const result = await this.dataProcessing({ startDate, endDate });
+  //   this.logger.log(result);
+  //   console.log(endDate);
   // }
   
   // @Cron('0 59 23 * * *', {
-  //   name: 'dailyQQCatalystTask',
+  //   name: 'midnightQQCatalystTask',
   //   timeZone: 'America/New_York',
   // })
   // async handleDailyTask() {
   //   this.logger.log('Executing midnight daily QQCatalyst task');
-  //   const todayDate = new Date().toISOString().substring(0,10);
+  //   const startDate = this.todayInTimeZone('America/New_York', 0);
+  //   const endDate = this.todayInTimeZone('Etc/UTC', 1);
   //   this.contactCacheList = [];
-  //   await this.dataProcessing({ startDate: todayDate, endDate: todayDate });
+  //   const result = await this.dataProcessing({ startDate, endDate });
+  //   this.logger.log(result);
   //   this.contactCacheList = [];
   // }
 }
