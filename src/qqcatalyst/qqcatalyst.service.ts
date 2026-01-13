@@ -79,6 +79,7 @@ export class QqcatalystService {
   }
 
   async getLocationsInfo() {
+    await this.checkAccessToken();
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
@@ -89,14 +90,15 @@ export class QqcatalystService {
       const response = await this.httpService.axiosRef.get(url, { headers });
       return response.data;
     } catch (error) {
-      this.logger.error('Error fetching  from QQCatalyst:', error);
+      this.logger.error('Error fetching LocationsInfo from QQCatalyst:', error);
       throw new InternalServerErrorException(
-        'Error fetching data from QQCatalyst',
+        'Error fetching LocationsInfo from QQCatalyst',
       );
     }
   }
   
   async getContactsLastModifiedCreated( startDate: string, endDate: string, pageSize = 1 ): Promise<ContactsListResponse> {
+    await this.checkAccessToken();
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
@@ -107,14 +109,15 @@ export class QqcatalystService {
       const response = await this.httpService.axiosRef.get(url, { headers });
       return response.data;
     } catch (error) {
-      this.logger.error('Error fetching data from QQCatalyst:', error);
+      this.logger.error('Error fetching ContactsLastModifiedCreated from QQCatalyst:', error);
       throw new InternalServerErrorException(
-        'Error fetching data from QQCatalyst',
+        'Error fetching ContactsLastModifiedCreated from QQCatalyst',
       );
     }
   }
   
   async getContactInfo(contactId: number): Promise<ContactInfoResponse> {
+    await this.checkAccessToken();
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
@@ -125,14 +128,15 @@ export class QqcatalystService {
       const response = await this.httpService.axiosRef.get(url, { headers });
       return response.data;
     } catch (error) {
-      this.logger.error('Error fetching data from QQCatalyst:', error);
+      this.logger.error('Error fetching ContactInfo from QQCatalyst:', error);
       throw new InternalServerErrorException(
-        'Error fetching data from QQCatalyst',
+        'Error fetching ContactInfo from QQCatalyst',
       );
     }
   }
   
   async getPoliciesByCustomer(customerId: number): Promise<PoliciesByClientResponse> {
+    await this.checkAccessToken();
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
@@ -143,14 +147,15 @@ export class QqcatalystService {
       const response = await this.httpService.axiosRef.get(url, { headers });
       return response.data;
     } catch (error) {
-      this.logger.error('Error fetching data from QQCatalyst:', error);
+      this.logger.error('Error fetching PoliciesByCustomer from QQCatalyst:', error);
       throw new InternalServerErrorException(
-        'Error fetching data from QQCatalyst',
+        'Error fetching PoliciesByCustomer from QQCatalyst',
       );
     }
   }
   
   async getContactNotes(contactId: number): Promise<ContactNotesResponse> {
+    await this.checkAccessToken();
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
@@ -161,14 +166,15 @@ export class QqcatalystService {
       const response = await this.httpService.axiosRef.get(url, { headers });
       return response.data;
     } catch (error) {
-      this.logger.error('Error fetching data from QQCatalyst:', error);
+      this.logger.error('Error fetching ContactNotes from QQCatalyst:', error);
       throw new InternalServerErrorException(
-        'Error fetching data from QQCatalyst',
+        'Error fetching ContactNotes from QQCatalyst',
       );
     }
   }
   
   async getPolicySummary(policyId: number) {
+    await this.checkAccessToken();
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
@@ -179,15 +185,14 @@ export class QqcatalystService {
       const response = await this.httpService.axiosRef.get(url, { headers });
       return response.data;
     } catch (error) {
-      this.logger.error('Error fetching data from QQCatalyst:', error);
+      this.logger.error('Error fetching PolicySummary from QQCatalyst:', error);
       throw new InternalServerErrorException(
-        'Error fetching data from QQCatalyst',
+        'Error fetching PolicySummary from QQCatalyst',
       );
     }
   }
 
   async dataProcessing({ startDate, endDate }: QqDateSearchDto) {
-    await this.checkAccessToken();
     const { TotalItems } = await this.getContactsLastModifiedCreated(startDate, endDate, 1);
     const contactResponse = await this.getContactsLastModifiedCreated(startDate, endDate, TotalItems);
     const firstStep = this.cleanContactData(contactResponse.Data);
@@ -229,7 +234,7 @@ export class QqcatalystService {
       source: await this.getSource(contact.EntityID, contact.LocationID),
       office: this.offices.find(office => office.qqOfficeId === contact.LocationID)?._id,
       isCustomer: (contact.ContactSubType === 'C')? await this.isCustomer(contact.EntityID) : false,
-      notes: (await this.getContactNotes(contact.EntityID)).Data.map(note => note.Comment),
+      notes: await this.getNotes(contact.EntityID),
       agent: this.users.find(user => user.name === contact.AgentName)?._id,  //Esta buscando por nombre, hay que cambiarlo para que busque por qqUserId!!
       qqPersonId: contact.EntityID,
       status: contact.Status,
@@ -297,6 +302,11 @@ export class QqcatalystService {
     return Data.length > 0;
   }
 
+  private async getNotes(entityId: number) {
+    const { Data } =  await this.getContactNotes(entityId);
+    return Data.map(note => note.Comment);
+  }
+
   async saveContactData(personDtos: any[]) {
     for (const personDto of personDtos) {
       try {
@@ -332,7 +342,6 @@ export class QqcatalystService {
   // })
   // async handlePreWorkTask() {
   //   this.logger.log('Executing pre-work QQCatalyst task');
-  //   await this.checkAccessToken();
   //   this.offices = await this.getOffices();
   //   this.users = await this.getUsersByOffice(this.offices);
   // }
