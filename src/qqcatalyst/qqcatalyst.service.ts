@@ -6,7 +6,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { Cron } from '@nestjs/schedule';
 import { QqDateSearchDto } from './dto/qq-date-search.dto';
-import { ContactInfoResponse, ContactNotesResponse, ContactResponse, ContactsListResponse, PoliciesByClientResponse } from './interfaces';
+import { ContactResponse } from './interfaces';
 import { OfficesService } from '../offices/offices.service';
 import { UsersService } from '../users/users.service';
 import { PersonsService } from '../persons/persons.service';
@@ -57,145 +57,65 @@ export class QqcatalystService {
     }
   }
 
-  private async checkAccessToken() {
+  async getQQCatalystRequest(url: string, requestFunc: string) {
     if (!this.accessToken) {
       this.accessToken = await this.getAccessToken();
-    } else {
-      // Check if the access token is still valid by making a simple request
-      // If the request fails, refresh the token
-      const headers = {
-        Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
-      };
-      try {
-        await this.httpService.axiosRef.get(
-          `${this.apiURL}BusinessLogic/Ping`,
-          { headers },
-        );
-      } catch (error) {
+    }
+    const headers = {
+      Authorization: `Bearer ${this.accessToken}`,
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      const response = await this.httpService.axiosRef.get(url, { headers });
+      return response.data;
+    } catch (error) {
+      if (error.status === 401) {
+        await new Promise((resolve) => setTimeout(resolve, 60000));
+        this.logger.warn('Waiting 1 minute before retrying the request');
         this.accessToken = await this.getAccessToken();
+        headers.Authorization = `Bearer ${this.accessToken}`;
+        try {
+          const response = await this.httpService.axiosRef.get(url, {
+            headers,
+          });
+          return response.data;
+        } catch (error) {
+          this.logger.error(
+            `Error fetching ${requestFunc} from QQCatalyst after token refresh:`,
+            error,
+          );
+          throw new InternalServerErrorException(
+            `Error fetching ${requestFunc} from QQCatalyst after token refresh`,
+          );
+        }
       }
-    }
-  }
-
-  async getLocationsInfo() {
-    await this.checkAccessToken();
-    const headers = {
-      Authorization: `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const url = `${this.apiURL}Locations/UserLocationsV2`;
-      const response = await this.httpService.axiosRef.get(url, { headers });
-      return response.data;
-    } catch (error) {
-      this.logger.error('Error fetching LocationsInfo from QQCatalyst:', error);
-      throw new InternalServerErrorException(
-        'Error fetching LocationsInfo from QQCatalyst',
+      this.logger.error(
+        `Error fetching ${requestFunc} from QQCatalyst:`,
+        error,
       );
-    }
-  }
-  
-  async getContactsLastModifiedCreated( startDate: string, endDate: string, pageSize = 1 ): Promise<ContactsListResponse> {
-    await this.checkAccessToken();
-    const headers = {
-      Authorization: `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const url = `${this.apiURL}Contacts/LastModifiedCreated?startDate=${startDate}&endDate=${endDate}&pageSize=${pageSize}`;
-      const response = await this.httpService.axiosRef.get(url, { headers });
-      return response.data;
-    } catch (error) {
-      this.logger.error('Error fetching ContactsLastModifiedCreated from QQCatalyst:', error);
       throw new InternalServerErrorException(
-        'Error fetching ContactsLastModifiedCreated from QQCatalyst',
-      );
-    }
-  }
-  
-  async getContactInfo(contactId: number): Promise<ContactInfoResponse> {
-    await this.checkAccessToken();
-    const headers = {
-      Authorization: `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const url = `${this.apiURL}Contacts/${contactId}/AccountInfo`;
-      const response = await this.httpService.axiosRef.get(url, { headers });
-      return response.data;
-    } catch (error) {
-      this.logger.error('Error fetching ContactInfo from QQCatalyst:', error);
-      throw new InternalServerErrorException(
-        'Error fetching ContactInfo from QQCatalyst',
-      );
-    }
-  }
-  
-  async getPoliciesByCustomer(customerId: number): Promise<PoliciesByClientResponse> {
-    await this.checkAccessToken();
-    const headers = {
-      Authorization: `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const url = `${this.apiURL}Policies/ByCustomer/${customerId}`;
-      const response = await this.httpService.axiosRef.get(url, { headers });
-      return response.data;
-    } catch (error) {
-      this.logger.error('Error fetching PoliciesByCustomer from QQCatalyst:', error);
-      throw new InternalServerErrorException(
-        'Error fetching PoliciesByCustomer from QQCatalyst',
-      );
-    }
-  }
-  
-  async getContactNotes(contactId: number): Promise<ContactNotesResponse> {
-    await this.checkAccessToken();
-    const headers = {
-      Authorization: `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const url = `${this.apiURL}Contacts/${contactId}/Notes`;
-      const response = await this.httpService.axiosRef.get(url, { headers });
-      return response.data;
-    } catch (error) {
-      this.logger.error('Error fetching ContactNotes from QQCatalyst:', error);
-      throw new InternalServerErrorException(
-        'Error fetching ContactNotes from QQCatalyst',
-      );
-    }
-  }
-  
-  async getPolicySummary(policyId: number) {
-    await this.checkAccessToken();
-    const headers = {
-      Authorization: `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const url = `${this.apiURL}PolicySummaryForApi?policyID=${policyId}`;
-      const response = await this.httpService.axiosRef.get(url, { headers });
-      return response.data;
-    } catch (error) {
-      this.logger.error('Error fetching PolicySummary from QQCatalyst:', error);
-      throw new InternalServerErrorException(
-        'Error fetching PolicySummary from QQCatalyst',
+        `Error fetching ${requestFunc} from QQCatalyst`,
       );
     }
   }
 
   async dataProcessing({ startDate, endDate }: QqDateSearchDto) {
-    const { TotalItems } = await this.getContactsLastModifiedCreated(startDate, endDate, 1);
-    const contactResponse = await this.getContactsLastModifiedCreated(startDate, endDate, TotalItems);
-    const firstStep = this.cleanContactData(contactResponse.Data);
+    const { Data, TotalItems } = await this.getQQCatalystRequest(
+      `${this.apiURL}Contacts/LastModifiedCreated?startDate=${startDate}&endDate=${endDate}&pageSize=100&pageNumber=1`,
+      'ContactsLastModifiedCreated',
+    );
+    if (TotalItems > 100) {
+      const totalPages = Math.ceil(TotalItems / 100);
+      for (let page = 2; page <= totalPages; page++) {
+        const pageData = await this.getQQCatalystRequest(
+          `${this.apiURL}Contacts/LastModifiedCreated?startDate=${startDate}&endDate=${endDate}&pageSize=100&pageNumber=${page}`,
+          'ContactsLastModifiedCreated',
+        );
+        Data.push(...pageData.Data);
+      }
+    }
+    const firstStep = this.cleanContactData(Data);
     const contactsToSave = await this.prepareContactData(firstStep);
     return this.saveContactData(contactsToSave);
   }
@@ -204,20 +124,29 @@ export class QqcatalystService {
     let i = 0;
     const response: ContactResponse[] = [];
     for (const contact of contacts) {
-      if (i < this.contactCacheList.length && this.contactCacheList[i].EntityID === contact.EntityID) {
-        if (this.contactCacheList[i].DateLastModified !== contact.DateLastModified && (contact.ContactSubType === 'C' || contact.ContactSubType === 'P')) {
+      if (
+        i < this.contactCacheList.length &&
+        this.contactCacheList[i].EntityID === contact.EntityID
+      ) {
+        if (
+          this.contactCacheList[i].DateLastModified !==
+            contact.DateLastModified &&
+          (contact.ContactSubType === 'C' || contact.ContactSubType === 'P')
+        ) {
           response.push(contact);
         }
         i++;
-      }
-      else if (contact.ContactSubType === 'C' || contact.ContactSubType === 'P') {
+      } else if (
+        contact.ContactSubType === 'C' ||
+        contact.ContactSubType === 'P'
+      ) {
         response.push(contact);
       }
     }
     this.contactCacheList = contacts;
     return response;
   }
-
+  
   //Devuelve un DTO de persona listo para ser guardado en la base de datos
   private async prepareContactData(contacts: ContactResponse[]) {
     if (this.offices.length === 0) {
@@ -226,24 +155,38 @@ export class QqcatalystService {
     if (this.users.length === 0) {
       this.users = await this.getUsersByOffice(this.offices);
     }
-    
-    const preparedData = contacts.map(async (contact) => ({
-      name: contact.DisplayName,
-      phone: contact.Phone,
-      since: new Date(new Date(contact.CreatedOn).getTime() - new Date().getTimezoneOffset() * 60 * 1000 * 2), // Ajuste de zona horaria
-      source: await this.getSource(contact.EntityID, contact.LocationID),
-      office: this.offices.find(office => office.qqOfficeId === contact.LocationID)?._id,
-      isCustomer: (contact.ContactSubType === 'C')? await this.isCustomer(contact.EntityID) : false,
-      notes: await this.getNotes(contact.EntityID),
-      agent: this.users.find(user => user.name === contact.AgentName)?._id,  //Esta buscando por nombre, hay que cambiarlo para que busque por qqUserId!!
-      qqPersonId: contact.EntityID,
-      status: contact.Status,
-    }));
-    return await Promise.all(preparedData);
+    const preparedData = [];
+    for (const contact of contacts) {
+      const personDto = {
+        name: contact.DisplayName,
+        phone: contact.Phone,
+        since: new Date(
+          new Date(contact.CreatedOn).getTime() -
+            new Date().getTimezoneOffset() * 60 * 1000 * 2,
+        ), // Ajuste de zona horaria
+        source: await this.getSource(contact.EntityID, contact.LocationID),
+        office: this.offices.find(
+          (office) => office.qqOfficeId === contact.LocationID,
+        )?._id,
+        isCustomer:
+          contact.ContactSubType === 'C'
+            ? await this.isCustomer(contact.EntityID)
+            : false,
+        notes: await this.getNotes(contact.EntityID),
+        agent: this.users.find((user) => user.name === contact.AgentName)?._id, //Esta buscando por nombre, hay que cambiarlo para que busque por qqUserId!!
+        qqPersonId: contact.EntityID,
+        status: contact.Status,
+      };
+      preparedData.push(personDto);
+    }
+    return preparedData;
   }
 
   private async getOffices() {
-    const data = await this.getLocationsInfo();
+    const data = await this.getQQCatalystRequest(
+      `${this.apiURL}Locations/UserLocationsV2`,
+      'LocationsInfo',
+    );
     const offices = [];
     for (const location of data) {
       const office = await this.officesService.findByQQID(location.QQID);
@@ -255,7 +198,10 @@ export class QqcatalystService {
   private async getUsersByOffice(offices: any[]) {
     let usersResult = [];
     for (const office of offices) {
-      const users = await this.usersService.findAllByOffice(office._id, { limit: 10, page: 1 });
+      const users = await this.usersService.findAllByOffice(office._id, {
+        limit: 10,
+        page: 1,
+      });
       if (usersResult.length > 0) {
         usersResult = this.mergeUsersByEmail(usersResult, users);
       } else {
@@ -274,56 +220,77 @@ export class QqcatalystService {
     return Array.from(map.values());
   }
 
-  private async getSource(entityId: number, locationId: number): Promise<string> {
-    const { CustomerSource } = await this.getContactInfo(entityId);
-    const office = this.offices.find(office => office.qqOfficeId === locationId);
+  private async getSource(
+    entityId: number,
+    locationId: number,
+  ): Promise<string> {
+    const { CustomerSource } = await this.getQQCatalystRequest(
+      `${this.apiURL}Contacts/${entityId}/AccountInfo`,
+      'ContactInfo',
+    );
+    const office = this.offices.find(
+      (office) => office.qqOfficeId === locationId,
+    );
     if (office && office.sources.includes(CustomerSource)) {
       return CustomerSource;
     }
     switch (CustomerSource) {
-    case "Facebook":
-      return "Referral";
-    case "Walk In":
-      return "Referral";
-    case "Social Media Email":
-      return "Email";
-    case "Email Campaign":
-      return "Email";
-    case "Social Media Call":
-      return "Call";
+      case 'Facebook':
+        return 'Referral';
+      case 'Walk In':
+        return 'Referral';
+      case 'Social Media Email':
+        return 'Email';
+      case 'Email Campaign':
+        return 'Email';
+      case 'Social Media Call':
+        return 'Call';
 
-    default:
-      return "";
+      default:
+        return '';
     }
   }
 
   private async isCustomer(entityId: number) {
-    const { Data } =  await this.getPoliciesByCustomer(entityId);
+    const { Data } = await this.getQQCatalystRequest(
+      `${this.apiURL}Policies/ByCustomer/${entityId}`,
+      'PoliciesByCustomer',
+    );
     return Data.length > 0;
   }
 
   private async getNotes(entityId: number) {
-    const { Data } =  await this.getContactNotes(entityId);
-    return Data.map(note => note.Comment);
+    const { Data } = await this.getQQCatalystRequest(
+      `${this.apiURL}Contacts/${entityId}/Notes`,
+      'ContactNotes',
+    );
+    return Data.map((note) => note.Comment);
   }
 
   async saveContactData(personDtos: any[]) {
     for (const personDto of personDtos) {
       try {
-        const existingPerson = await this.personsService.findByQuery({ office: personDto.office , qqPersonId: personDto.qqPersonId });
+        const existingPerson = await this.personsService.findByQuery({
+          office: personDto.office,
+          qqPersonId: personDto.qqPersonId,
+        });
         if (existingPerson.length > 0) {
           if (personDto.status === 'D') {
             this.personsService.remove(existingPerson[0]._id.toString());
+          } else {
+            await this.personsService.update(
+              existingPerson[0]._id.toString(),
+              personDto,
+            );
           }
-          else {
-            await this.personsService.update(existingPerson[0]._id.toString(), personDto);
-          }
-        }
-        else if (personDto.status !== 'D') {
+        } else if (personDto.status !== 'D') {
           await this.personsService.create(personDto);
         }
       } catch (error) {
-        this.logger.error(`Error saving person with qqPersonId ${personDto.qqPersonId}:`, error);
+        this.logger.error(
+          `Error saving person with qqPersonId ${personDto.qqPersonId}:`,
+          error,
+        );
       }
     }
     return 'Data processing completed';
@@ -356,9 +323,8 @@ export class QqcatalystService {
   //   const endDate = this.todayInTimeZone('Etc/UTC', 1);
   //   const result = await this.dataProcessing({ startDate, endDate });
   //   this.logger.log(result);
-  //   console.log(endDate);
   // }
-  
+
   // @Cron('0 59 23 * * *', {
   //   name: 'midnightQQCatalystTask',
   //   timeZone: 'America/New_York',

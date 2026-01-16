@@ -11,9 +11,7 @@ export class QqcatalystController {
   constructor(private readonly qqcatalystService: QqcatalystService) {}
 
   @Get()
-  getAccessToken(
-    @Query() qqDateSearchDto: QqDateSearchDto,
-  ) {
+  getAccessToken(@Query() qqDateSearchDto: QqDateSearchDto) {
     return this.qqcatalystService.dataProcessing(qqDateSearchDto);
   }
 }

@@ -14,7 +14,7 @@ export class Office {
 
   @Prop()
   qqOfficeId: number;
-  
+
   @Prop()
   QQID: string;
 }
