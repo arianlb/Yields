@@ -11,6 +11,7 @@ import { Policy } from './schemas/policy.schema';
 import { UsersService } from '../users/users.service';
 import { PersonsService } from '../persons/persons.service';
 import { DateSearchDto } from '../common/dto/date-search.dto';
+import { AssignPoliciesDto } from './dto/assign-policies.dto';
 
 @Injectable()
 export class PoliciesService {
@@ -109,6 +110,34 @@ export class PoliciesService {
       throw new NotFoundException(`Policy with id ${id} not found`);
     }
     return policy;
+  }
+
+  async assignPoliciesToAgent({agentId, officeId, policyIds}: AssignPoliciesDto): Promise<Policy[]> {
+    const agent = await this.usersService.findOne(agentId);
+    if (!agent.offices.find((offId) => (offId as any).equals(officeId as any))) {
+      throw new BadRequestException(
+        `User with id ${agentId} does not have access to office with id ${officeId}`,
+      );
+    }
+    const updatedPolicies = await this.policyModel
+      .updateMany(
+        { _id: { $in: policyIds }, office: officeId },
+        { $set: { renewalAgent: agentId } },
+        { new: true },
+      )
+      .lean()
+      .exec();
+
+    if (updatedPolicies.matchedCount === 0) {
+      throw new NotFoundException(
+        `No policies found with the provided ids`,
+      );
+    }
+
+    return this.policyModel
+      .find({ _id: { $in: policyIds } })
+      .lean()
+      .exec();
   }
 
   async remove(id: string): Promise<string> {

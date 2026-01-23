@@ -8,15 +8,17 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PoliciesService } from './policies.service';
 import { CreatePolicyDto } from './dto/create-policy.dto';
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
 import { DateSearchDto } from '../common/dto/date-search.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
+import { AssignPoliciesDto } from './dto/assign-policies.dto';
 
 @ApiTags('Policies')
+@ApiBearerAuth()
 @Auth()
 @Controller('policies')
 export class PoliciesController {
@@ -62,6 +64,11 @@ export class PoliciesController {
     @Body() updatePolicyDto: UpdatePolicyDto,
   ) {
     return this.policiesService.update(id, updatePolicyDto);
+  }
+
+  @Post('assign-policies')
+  assignPoliciesToAgent(@Body() assignPoliciesDto: AssignPoliciesDto) {
+    return this.policiesService.assignPoliciesToAgent(assignPoliciesDto);
   }
 
   @Delete(':id')
