@@ -40,6 +40,11 @@ export class CreatePolicyDto {
   @IsString()
   @MinLength(2)
   readonly carrier: string;
+  
+  @ApiProperty()
+  @IsString()
+  @MinLength(2)
+  readonly line: string;
 
   @ApiProperty()
   @IsPositive()

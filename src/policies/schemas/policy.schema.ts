@@ -23,6 +23,9 @@ export class Policy {
 
   @Prop()
   carrier: string;
+  
+  @Prop()
+  line: string;
 
   @Prop()
   premium: number;

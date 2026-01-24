@@ -69,7 +69,7 @@ export class PoliciesService {
         cancellationDate: null,
       })
       .select(
-        'policyNumber carrier premium expirationDate renewed status notes person renewalAgent',
+        'policyNumber carrier line premium expirationDate renewed status notes person renewalAgent',
       )
       .populate('person', 'name phone')
       .populate('renewalAgent', 'name')
@@ -89,7 +89,7 @@ export class PoliciesService {
         office: officeId,
         cancellationDate: { $gte: startDate, $lte: endDate },
       })
-      .select('policyNumber carrier premium cancellationDate notes person')
+      .select('policyNumber carrier line premium cancellationDate notes person')
       .populate('person', 'name phone')
       .sort({ cancellationDate: 1 })
       .lean()
