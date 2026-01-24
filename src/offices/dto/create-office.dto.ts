@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsInt,
@@ -6,7 +7,20 @@ import {
   IsPositive,
   IsString,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+
+export class SourceObjectDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  readonly name: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  readonly color: string;
+}
 
 export class CreateOfficeDto {
   @ApiProperty()
@@ -23,6 +37,12 @@ export class CreateOfficeDto {
   @IsArray()
   @IsString({ each: true })
   readonly sources: string[];
+
+  @ApiProperty({ type: [SourceObjectDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SourceObjectDto)
+  readonly sourceObjects: SourceObjectDto[];
 
   @ApiProperty()
   @IsOptional()

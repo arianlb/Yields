@@ -1,5 +1,10 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+
+export interface SourceObject {
+  name: string;
+  color: string;
+}
 
 @Schema()
 export class Office {
@@ -11,6 +16,9 @@ export class Office {
 
   @Prop({ type: [String] })
   sources: string[];
+
+  @Prop(raw([{ name: { type: String }, color: { type: String } }]))
+  sourceObjects: SourceObject[];
 
   @Prop()
   qqOfficeId: number;
