@@ -8,7 +8,7 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PersonsService } from './persons.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
@@ -18,6 +18,7 @@ import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.
 import { Auth } from '../auth/decorators/auth.decorator';
 
 @ApiTags('Persons')
+@ApiBearerAuth()
 @Auth()
 @Controller('persons')
 export class PersonsController {

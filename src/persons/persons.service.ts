@@ -66,6 +66,8 @@ export class PersonsService {
     officeId: string,
     { startDate, endDate }: DateSearchDto,
   ): Promise<Person[]> {
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
     return this.personModel
       .find({ office: officeId, since: { $gte: startDate, $lte: endDate } })
       .populate('agent', 'name')

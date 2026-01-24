@@ -60,6 +60,8 @@ export class PoliciesService {
     officeId: string,
     { startDate, endDate }: DateSearchDto,
   ): Promise<Policy[]> {
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
     return this.policyModel
       .find({
         office: officeId,
@@ -80,6 +82,8 @@ export class PoliciesService {
     officeId: string,
     { startDate, endDate }: DateSearchDto,
   ): Promise<Policy[]> {
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
     return this.policyModel
       .find({
         office: officeId,
