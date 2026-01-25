@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsDate,
   IsInt,
   IsMongoId,
   IsOptional,
@@ -9,7 +10,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class SearchCriteriaDto {
+export class PolicySearchCriteriaDto {
   @ApiProperty()
   @IsMongoId()
   @IsOptional()
@@ -19,19 +20,23 @@ export class SearchCriteriaDto {
   @IsOptional()
   @IsString()
   @MinLength(2)
-  name?: string;
+  policyNumber?: string;
+
+  @ApiProperty({
+    description: 'The start date in YYYY-MM-DD format',
+    type: String,
+    format: 'date',
+    example: '2026-12-26',
+  })
+  @Type(() => Date)
+  @IsOptional()
+  @IsDate()
+  readonly effectiveDate?: Date;
 
   @ApiProperty()
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  readonly phone?: number;
-
-  @ApiProperty()
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @IsPositive()
-  readonly qqPersonId?: number;
+  readonly qqPolicyId?: number;
 }

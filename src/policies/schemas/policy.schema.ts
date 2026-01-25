@@ -33,7 +33,7 @@ export class Policy {
   @Prop({ default: false })
   renewed: boolean;
 
-  @Prop({ default: 'Active' })
+  @Prop({ default: 'A' })
   status: string;
 
   @Prop({ type: [String] })

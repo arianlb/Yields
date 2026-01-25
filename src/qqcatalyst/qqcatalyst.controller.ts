@@ -11,7 +11,12 @@ export class QqcatalystController {
   constructor(private readonly qqcatalystService: QqcatalystService) {}
 
   @Get()
-  getAccessToken(@Query() qqDateSearchDto: QqDateSearchDto) {
-    return this.qqcatalystService.dataProcessing(qqDateSearchDto);
+  processContacts(@Query() qqDateSearchDto: QqDateSearchDto) {
+    return this.qqcatalystService.contactsProcessing(qqDateSearchDto);
+  }
+  
+  @Get()
+  processPolicies(@Query() qqDateSearchDto: QqDateSearchDto) {
+    return this.qqcatalystService.policiesProcessing(qqDateSearchDto);
   }
 }

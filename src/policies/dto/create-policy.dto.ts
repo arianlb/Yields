@@ -36,6 +36,17 @@ export class CreatePolicyDto {
   @IsDate()
   readonly expirationDate: Date;
 
+  @ApiProperty({
+    description: 'The start date in YYYY-MM-DD format',
+    type: String,
+    format: 'date',
+    example: '2024-12-26',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  readonly cancellationDate?: Date;
+
   @ApiProperty()
   @IsString()
   @MinLength(2)

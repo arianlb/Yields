@@ -77,6 +77,9 @@ export class PersonsService {
   }
 
   async findByQuery(searchCriteriaDto: SearchCriteriaDto) {
+    if (searchCriteriaDto.name) {
+      searchCriteriaDto.name = this.capitalizeFirstLetter(searchCriteriaDto.name);
+    }
     return this.personModel.find(searchCriteriaDto).lean().exec();
   }
 

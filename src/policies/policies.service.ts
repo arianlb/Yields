@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { PersonsService } from '../persons/persons.service';
 import { DateSearchDto } from '../common/dto/date-search.dto';
 import { AssignPoliciesDto } from './dto/assign-policies.dto';
+import { PolicySearchCriteriaDto } from './dto/policy-search-criteria.dto';
 
 @Injectable()
 export class PoliciesService {
@@ -46,14 +47,8 @@ export class PoliciesService {
     });
   }
 
-  async findByPolicyNumber(
-    officeId: string,
-    policyNumber: string,
-  ): Promise<Policy[]> {
-    return this.policyModel
-      .find({ office: officeId, policyNumber })
-      .lean()
-      .exec();
+  async findByQuery(policySearchCriteriaDto: PolicySearchCriteriaDto) {
+    return this.policyModel.find(policySearchCriteriaDto).lean().exec();
   }
 
   async findByExpirationDate(
@@ -66,10 +61,10 @@ export class PoliciesService {
       .find({
         office: officeId,
         expirationDate: { $gte: startDate, $lte: endDate },
-        cancellationDate: null,
+        status: { $ne: 'C' },
       })
       .select(
-        'policyNumber carrier line premium expirationDate renewed status notes person renewalAgent',
+        'policyNumber carrier line premium effectiveDate expirationDate renewed status notes person renewalAgent',
       )
       .populate('person', 'name phone')
       .populate('renewalAgent', 'name')
@@ -88,6 +83,7 @@ export class PoliciesService {
       .find({
         office: officeId,
         cancellationDate: { $gte: startDate, $lte: endDate },
+        status: 'C',
       })
       .select('policyNumber carrier line premium cancellationDate notes person')
       .populate('person', 'name phone')
@@ -106,7 +102,27 @@ export class PoliciesService {
 
   async update(id: string, updatePolicyDto: UpdatePolicyDto): Promise<Policy> {
     const { person, ...restDto } = updatePolicyDto;
-    const policy = this.policyModel
+    let policy;
+    if (restDto.cancellationDate) {
+      policy = await this.policyModel.findById(id);
+      
+      if (!policy) {
+        throw new NotFoundException(`Policy with id ${id} not found`);
+      }
+      
+      const cancellation = new Date(restDto.cancellationDate);
+      cancellation.setHours(0, 0, 0, 0);
+      const cancellationDate = cancellation.getTime();
+      const effectiveDate = policy.effectiveDate.getTime();
+      const expirationDate = policy.expirationDate.getTime();
+      if (cancellationDate <= effectiveDate || cancellationDate >= expirationDate) {
+        throw new BadRequestException(
+          `Cancellation date must be between effective date and expiration date`,
+        );
+      }
+    }
+    
+    policy = this.policyModel
       .findByIdAndUpdate(id, restDto, { new: true })
       .lean()
       .exec();

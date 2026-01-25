@@ -1,5 +1,5 @@
 export interface PoliciesByClientResponse {
-  Data: PolicyResponse[];
+  Data: PolicyByClientResponse[];
   PageNumber: number;
   PagesTotal: number;
   TotalItems: number;
@@ -11,7 +11,7 @@ export interface PoliciesByClientResponse {
   Href: string;
 }
 
-export interface PolicyResponse {
+export interface PolicyByClientResponse {
   AgentName: string;
   MGA: null;
   WritingCarrier: string;

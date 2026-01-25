@@ -16,6 +16,7 @@ import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.
 import { DateSearchDto } from '../common/dto/date-search.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { AssignPoliciesDto } from './dto/assign-policies.dto';
+import { PolicySearchCriteriaDto } from './dto/policy-search-criteria.dto';
 
 @ApiTags('Policies')
 @ApiBearerAuth()
@@ -52,10 +53,9 @@ export class PoliciesController {
 
   @Get(':officeId/policy-number/:policyNumber')
   findByPolicyNumber(
-    @Param('officeId', ParseMongoIdPipe) officeId: string,
-    @Param('policyNumber') policyNumber: string,
+    @Query() policySearchCriteriaDto: PolicySearchCriteriaDto
   ) {
-    return this.policiesService.findByPolicyNumber(officeId, policyNumber);
+    return this.policiesService.findByQuery(policySearchCriteriaDto);
   }
 
   @Patch(':id')

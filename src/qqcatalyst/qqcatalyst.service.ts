@@ -6,10 +6,11 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { Cron } from '@nestjs/schedule';
 import { QqDateSearchDto } from './dto/qq-date-search.dto';
-import { ContactResponse } from './interfaces';
+import { ContactResponse, PolicyResponse } from './interfaces';
 import { OfficesService } from '../offices/offices.service';
 import { UsersService } from '../users/users.service';
 import { PersonsService } from '../persons/persons.service';
+import { PoliciesService } from '../policies/policies.service';
 
 @Injectable()
 export class QqcatalystService {
@@ -22,6 +23,7 @@ export class QqcatalystService {
   private readonly apiURL = 'https://api.qqcatalyst.com/v1/';
   private accessToken: string | null = null;
   private contactCacheList: ContactResponse[] = [];
+  private policiesCacheList: PolicyResponse[] = [];
   private offices = [];
   private users = [];
 
@@ -30,6 +32,7 @@ export class QqcatalystService {
     private readonly officesService: OfficesService,
     private readonly usersService: UsersService,
     private readonly personsService: PersonsService,
+    private readonly policiesService: PoliciesService,
   ) {}
 
   private async getAccessToken() {
@@ -100,7 +103,7 @@ export class QqcatalystService {
     }
   }
 
-  async dataProcessing({ startDate, endDate }: QqDateSearchDto) {
+  async contactsProcessing({ startDate, endDate }: QqDateSearchDto) {
     const { Data, TotalItems } = await this.getQQCatalystRequest(
       `${this.apiURL}Contacts/LastModifiedCreated?startDate=${startDate}&endDate=${endDate}&pageSize=100&pageNumber=1`,
       'ContactsLastModifiedCreated',
@@ -293,8 +296,228 @@ export class QqcatalystService {
         );
       }
     }
-    return 'Data processing completed';
+    return 'Contacts processing completed';
   }
+
+  /// Trabajo con Polizas
+
+  async policiesProcessing({ startDate, endDate }: QqDateSearchDto) {
+    const { Data, TotalItems } = await this.getQQCatalystRequest(
+      `${this.apiURL}Policies/LastModifiedCreated?startDate=${startDate}&endDate=${endDate}&pageSize=100&pageNumber=1`,
+      'PoliciesLastModifiedCreated',
+    );
+    if (TotalItems > 100) {
+      const totalPages = Math.ceil(TotalItems / 100);
+      for (let page = 2; page <= totalPages; page++) {
+        const pageData = await this.getQQCatalystRequest(
+          `${this.apiURL}Policies/LastModifiedCreated?startDate=${startDate}&endDate=${endDate}&pageSize=100&pageNumber=${page}`,
+          'PoliciesLastModifiedCreated',
+        );
+        Data.push(...pageData.Data);
+      }
+    }
+    const firstStep = this.cleanPoliciesData(Data);
+    const policiesToSave = await this.preparePoliciesData(firstStep);
+    return this.savePoliciesData(policiesToSave);
+  }
+
+  private cleanPoliciesData(policies: PolicyResponse[]) {
+    let i = 0;
+    const response: PolicyResponse[] = [];
+    for (const policy of policies) {
+      if (
+        i < this.policiesCacheList.length &&
+        this.policiesCacheList[i].PolicyId === policy.PolicyId
+      ) {
+        if (
+          this.policiesCacheList[i].DateLastModified !==
+            policy.DateLastModified
+        ) {
+          response.push(policy);
+        }
+        i++;
+      } else {
+        response.push(policy);
+      }
+    }
+    this.policiesCacheList = policies;
+    return response;
+  }
+
+  private async preparePoliciesData(policies: PolicyResponse[]) {
+    // Lógica para preparar los datos de las pólizas si es necesario
+    if (this.offices.length === 0) {
+      this.offices = await this.getOffices();
+    }
+    if (this.users.length === 0) {
+      this.users = await this.getUsersByOffice(this.offices);
+    }
+    const preparedPolicies = [];
+    for (const policy of policies) {
+      const preparedPolicy = {
+        policyNumber: policy.PolicyNumber,
+        effectiveDate: policy.EffectiveDate,
+        expirationDate: policy.ExpirationDate,
+        cancellationDate: policy.Status === 'C'
+          ? await this.getCancelationDate(policy.PolicyId)
+          : null,
+        carrier: policy.WritingCarrier,
+        line: policy.LOB,
+        premium: policy.TotalPremium,
+        qqPolicyId: policy.PolicyId,
+        salesAgent: this.users.find(
+          (user) => user.name === policy.AgentName,
+        )?._id,
+        customer: policy.CustomerId,
+        customerName: policy.CustomerName,
+        status: policy.Status,
+        priorPolicy: policy.PriorPolicyID,
+        isDeleted: policy.IsDeleted,
+      };
+      preparedPolicies.push(preparedPolicy);
+    }
+    return preparedPolicies;
+  }
+
+  private async getCancelationDate(policyId: number) {
+    const data = await this.getQQCatalystRequest(
+      `${this.apiURL}Policies/${policyId}/Adjustments`,
+      'PolicyAdjustments',
+    );
+    const cancellationAdjustment = data.find(
+      (adjustment) => adjustment.AdjustmentType === 'C',
+    );
+    return cancellationAdjustment ? cancellationAdjustment.AdjustmentDate : null;
+  }
+
+  async savePoliciesData(policyDtos: any[]) {
+    for (const policyDto of policyDtos) {
+      try {
+        // Lógica para guardar o actualizar las pólizas en la base de datos
+        let existingPerson;
+        existingPerson = await this.personsService.findByQuery({
+          qqPersonId: policyDto.customer,
+          name: policyDto.customerName,
+        });
+        if (existingPerson.length === 0) {
+          //Si no existe la persona, se crea para asociar la póliza a esa persona
+          const newPerson = await this.createCustomerIfNotExists(policyDto.customer);
+          existingPerson = [newPerson];
+        }
+        // Hay una probabilidad de que haya más de una persona con el mismo qqPersonId y nombre y eso hay que manejarlo!!
+        if (existingPerson.length > 1) {
+          this.logger.warn(
+            `Multiple persons found with qqPersonId ${policyDto.customer} and name ${policyDto.customerName} for policy ${policyDto.policyNumber}`,
+          );
+          continue;
+        }
+        const personId = existingPerson[0]._id.toString();
+        
+        //Si la poliza tiene PriorPolicyId y se verifica que esta poliza es un Renewal, se busca la póliza anterior para marcarla como renovada
+        if (policyDto.priorPolicy && !policyDto.isDeleted && await this.isPolicyRenewal(policyDto.priorPolicy)) {
+          this.markPolicyAsRenewed(policyDto.priorPolicy, existingPerson[0].office);
+        }
+        
+        const existingPolicy = await this.policiesService.findByQuery({
+          office: existingPerson[0].office,
+          policyNumber: policyDto.policyNumber,
+        });
+        if (existingPolicy) {
+          //Si hay más de una póliza con el mismo número, se compara la fecha de vigencia para decidir si se actualiza o crea una nueva
+          const policy = existingPolicy.find(p => p.effectiveDate.getTime() === new Date(policyDto.effectiveDate).getTime());
+          if (policy) {
+            // Si la póliza ya existe con la misma fecha de vigencia, actualizarla
+            if (!policyDto.isDeleted) {
+              await this.policiesService.update(
+                policy._id.toString(),
+                {
+                  ...policyDto,
+                  person: personId,
+                },
+              );
+            } else {
+              //Si la poliza tiene PriorPolicyId y se verifica que esta poliza es un Renewal,
+              //Se busca si el cliente no tiene mas polizas que sean renovación de la poliza anterior y si no las tiene,
+              //Se desmarca como renovada la poliza anterior.
+              // if (policyDto.priorPolicy && await this.isPolicyRenewal(policyDto.priorPolicy)) {}
+                
+              await this.policiesService.remove(policy._id.toString());
+            }
+          } else {
+            // Si no existe una póliza con la misma fecha de vigencia, crear una nueva
+            if (!policyDto.isDeleted) {
+              await this.policiesService.create({
+                ...policyDto,
+                person: personId,
+                office: existingPerson[0].office,
+              });
+            }
+          }
+        } else {
+          if (!policyDto.isDeleted) {
+            await this.policiesService.create({
+              ...policyDto,
+              person: personId,
+              office: existingPerson[0].office,
+            });
+          }
+        }
+      } catch (error) {
+        this.logger.error(
+          `Error saving policy with qqPolicyId ${policyDto.qqPolicyId}:`,
+          error,
+        );
+      }
+    }
+    return 'Policies processing completed';
+  }
+
+  private async createCustomerIfNotExists(customerId: number) {
+    const contact = await this.getQQCatalystRequest(
+      `${this.apiURL}Contacts/${customerId}/ContactSummaryDTO`,
+      'ContactSummaryDTO',
+    );
+    const personDto = {
+      name: contact.DisplayName,
+      phone: contact.Phone,
+      since: new Date(
+        new Date(contact.CreatedOn).getTime() -
+          new Date().getTimezoneOffset() * 60 * 1000 * 2,
+      ), // Ajuste de zona horaria
+      source: await this.getSource(contact.EntityID, contact.LocationID),
+      office: this.offices.find(
+        (office) => office.qqOfficeId === contact.LocationID,
+      )?._id,
+      agent: this.users.find((user) => user.name === contact.AgentName)?._id, //Esta buscando por nombre, hay que cambiarlo para que busque por qqUserId!!
+      qqPersonId: contact.EntityID,
+    };
+    const newPerson = await this.personsService.create(personDto);
+    return newPerson;
+  }
+
+  private async isPolicyRenewal(priorPolicyId: number): Promise<boolean> {
+    const policy = await this.getQQCatalystRequest(
+      `${this.apiURL}PolicySummaryForApi?policyID=${priorPolicyId}`,
+      'PolicySummaryForApi',
+    );
+    return policy.BusinessType === 'R';
+  }
+
+  private async markPolicyAsRenewed(priorPolicyId: number, office: string) {
+    const existingPolicies = await this.policiesService.findByQuery({
+      office,
+      qqPolicyId: priorPolicyId,
+    });
+    if (existingPolicies.length > 0) {
+      const policy = existingPolicies[0];
+      await this.policiesService.update(policy._id.toString(), {
+        renewed: true,
+      });
+    }
+  }
+
+
+  /// Utilidades de zona horaria para las tareas programadas
 
   private todayInTimeZone(tz: string, extraDays: number): string {
     const today = new Date();
@@ -321,7 +544,7 @@ export class QqcatalystService {
   //   this.logger.log('Executing every 5 minutes QQCatalyst task');
   //   const startDate = this.todayInTimeZone('America/New_York', 0);
   //   const endDate = this.todayInTimeZone('Etc/UTC', 1);
-  //   const result = await this.dataProcessing({ startDate, endDate });
+  //   const result = await this.contactsProcessing({ startDate, endDate });
   //   this.logger.log(result);
   // }
 
@@ -334,7 +557,7 @@ export class QqcatalystService {
   //   const startDate = this.todayInTimeZone('America/New_York', 0);
   //   const endDate = this.todayInTimeZone('Etc/UTC', 1);
   //   this.contactCacheList = [];
-  //   const result = await this.dataProcessing({ startDate, endDate });
+  //   const result = await this.contactsProcessing({ startDate, endDate });
   //   this.logger.log(result);
   //   this.contactCacheList = [];
   // }
