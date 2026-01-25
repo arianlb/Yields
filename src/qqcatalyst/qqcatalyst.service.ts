@@ -26,6 +26,7 @@ export class QqcatalystService {
   private policiesCacheList: PolicyResponse[] = [];
   private offices = [];
   private users = [];
+  private taskRunning = false;
 
   constructor(
     private readonly httpService: HttpService,
@@ -414,8 +415,8 @@ export class QqcatalystService {
         const personId = existingPerson[0]._id.toString();
         
         //Si la poliza tiene PriorPolicyId y se verifica que esta poliza es un Renewal, se busca la póliza anterior para marcarla como renovada
-        if (policyDto.priorPolicy && !policyDto.isDeleted && await this.isPolicyRenewal(policyDto.priorPolicy)) {
-          this.markPolicyAsRenewed(policyDto.priorPolicy, existingPerson[0].office);
+        if (policyDto.priorPolicy && !policyDto.isDeleted && await this.isPolicyRenewal(policyDto.qqPolicyId)) {
+          this.editRenewedStatus(policyDto.priorPolicy, existingPerson[0].office, true);
         }
         
         const existingPolicy = await this.policiesService.findByQuery({
@@ -439,7 +440,11 @@ export class QqcatalystService {
               //Si la poliza tiene PriorPolicyId y se verifica que esta poliza es un Renewal,
               //Se busca si el cliente no tiene mas polizas que sean renovación de la poliza anterior y si no las tiene,
               //Se desmarca como renovada la poliza anterior.
-              // if (policyDto.priorPolicy && await this.isPolicyRenewal(policyDto.priorPolicy)) {}
+              if (policyDto.priorPolicy && await this.isPolicyRenewal(policyDto.qqPolicyId)) {
+                if (!await this.isAnotherRenewalExists(policyDto.priorPolicy, policyDto.customer)) {
+                  this.editRenewedStatus(policyDto.priorPolicy, existingPerson[0].office, false);
+                }
+              }
                 
               await this.policiesService.remove(policy._id.toString());
             }
@@ -488,6 +493,7 @@ export class QqcatalystService {
       office: this.offices.find(
         (office) => office.qqOfficeId === contact.LocationID,
       )?._id,
+      isCustomer: true,
       agent: this.users.find((user) => user.name === contact.AgentName)?._id, //Esta buscando por nombre, hay que cambiarlo para que busque por qqUserId!!
       qqPersonId: contact.EntityID,
     };
@@ -495,15 +501,15 @@ export class QqcatalystService {
     return newPerson;
   }
 
-  private async isPolicyRenewal(priorPolicyId: number): Promise<boolean> {
+  private async isPolicyRenewal(qqPolicyId: number): Promise<boolean> {
     const policy = await this.getQQCatalystRequest(
-      `${this.apiURL}PolicySummaryForApi?policyID=${priorPolicyId}`,
+      `${this.apiURL}PolicySummaryForApi?policyID=${qqPolicyId}`,
       'PolicySummaryForApi',
     );
     return policy.BusinessType === 'R';
   }
 
-  private async markPolicyAsRenewed(priorPolicyId: number, office: string) {
+  private async editRenewedStatus(priorPolicyId: number, office: string, renewed: boolean) {
     const existingPolicies = await this.policiesService.findByQuery({
       office,
       qqPolicyId: priorPolicyId,
@@ -511,9 +517,28 @@ export class QqcatalystService {
     if (existingPolicies.length > 0) {
       const policy = existingPolicies[0];
       await this.policiesService.update(policy._id.toString(), {
-        renewed: true,
+        renewed,
       });
     }
+  }
+
+  private async isAnotherRenewalExists(priorPolicyId: number, customerId: number): Promise<boolean> {
+    const { Data } = await this.getQQCatalystRequest(
+      `${this.apiURL}Policies/ByCustomer/${customerId}`,
+      'PoliciesByCustomer',
+    );
+    for (const policy of Data) {
+      if (policy.PolicyId !== priorPolicyId && policy.Status !== 'E') {
+        const newPolicy = await this.getQQCatalystRequest(
+          `${this.apiURL}PolicySummaryForApi?policyID=${policy.PolicyId}`,
+          'PolicySummaryForApi',
+        );
+        if (newPolicy.PriorPolicyId === priorPolicyId && newPolicy.BusinessType === 'R') {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 
@@ -541,13 +566,19 @@ export class QqcatalystService {
   //   timeZone: 'America/New_York',
   // })
   // async handleFiveMinuteTask() {
-  //   this.logger.log('Executing every 5 minutes QQCatalyst task');
-  //   const startDate = this.todayInTimeZone('America/New_York', 0);
-  //   const endDate = this.todayInTimeZone('Etc/UTC', 1);
-  //   const result = await this.contactsProcessing({ startDate, endDate });
-  //   this.logger.log(result);
+  //   if (!this.taskRunning) {
+  //     this.taskRunning = true;
+  //     this.logger.log('Executing every 5 minutes QQCatalyst task');
+  //     const startDate = this.todayInTimeZone('America/New_York', 0);
+  //     const endDate = this.todayInTimeZone('Etc/UTC', 1);
+  //     const result = await this.contactsProcessing({ startDate, endDate });
+  //     this.logger.log(result);
+  //     const policiesResult = await this.policiesProcessing({ startDate, endDate });
+  //     this.logger.log(policiesResult);
+  //     this.taskRunning = false;
+  //   }
   // }
-
+  
   // @Cron('0 59 23 * * *', {
   //   name: 'midnightQQCatalystTask',
   //   timeZone: 'America/New_York',
@@ -559,6 +590,9 @@ export class QqcatalystService {
   //   this.contactCacheList = [];
   //   const result = await this.contactsProcessing({ startDate, endDate });
   //   this.logger.log(result);
+  //   const policiesResult = await this.policiesProcessing({ startDate, endDate });
+  //   this.logger.log(policiesResult);
   //   this.contactCacheList = [];
+  //   this.policiesCacheList = [];
   // }
 }

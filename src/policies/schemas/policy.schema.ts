@@ -12,10 +12,10 @@ export class Policy {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Office' })
   office: Office;
 
-  @Prop()
+  @Prop({ required: true })
   effectiveDate: Date;
 
-  @Prop()
+  @Prop({ required: true })
   expirationDate: Date;
 
   @Prop()

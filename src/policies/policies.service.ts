@@ -115,7 +115,7 @@ export class PoliciesService {
       const cancellationDate = cancellation.getTime();
       const effectiveDate = policy.effectiveDate.getTime();
       const expirationDate = policy.expirationDate.getTime();
-      if (cancellationDate <= effectiveDate || cancellationDate >= expirationDate) {
+      if (cancellationDate < effectiveDate || cancellationDate > expirationDate) {
         throw new BadRequestException(
           `Cancellation date must be between effective date and expiration date`,
         );

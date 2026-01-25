@@ -1,21 +1,22 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { QqcatalystService } from './qqcatalyst.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { QqDateSearchDto } from './dto/qq-date-search.dto';
-// import { CreateQqcatalystDto } from './dto/create-qqcatalyst.dto';
-// import { UpdateQqcatalystDto } from './dto/update-qqcatalyst.dto';
+import { Auth } from '../auth/decorators/auth.decorator';
 
 @ApiTags('QQCatalyst')
+@ApiBearerAuth()
+@Auth()
 @Controller('qqcatalyst')
 export class QqcatalystController {
   constructor(private readonly qqcatalystService: QqcatalystService) {}
 
-  @Get()
+  @Get('/contacts')
   processContacts(@Query() qqDateSearchDto: QqDateSearchDto) {
     return this.qqcatalystService.contactsProcessing(qqDateSearchDto);
   }
   
-  @Get()
+  @Get('/policies')
   processPolicies(@Query() qqDateSearchDto: QqDateSearchDto) {
     return this.qqcatalystService.policiesProcessing(qqDateSearchDto);
   }

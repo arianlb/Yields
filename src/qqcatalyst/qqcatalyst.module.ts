@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { AuthModule } from '../auth/auth.module';
 import { QqcatalystService } from './qqcatalyst.service';
 import { QqcatalystController } from './qqcatalyst.controller';
 import { OfficesModule } from '../offices/offices.module';
@@ -12,6 +13,7 @@ import { PoliciesModule } from '../policies/policies.module';
   providers: [QqcatalystService],
   imports: [
     HttpModule,
+    AuthModule,
     OfficesModule,
     UsersModule,
     PersonsModule,
