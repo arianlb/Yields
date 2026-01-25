@@ -51,8 +51,8 @@ export class PoliciesController {
     return this.policiesService.findOne(id);
   }
 
-  @Get(':officeId/policy-number/:policyNumber')
-  findByPolicyNumber(
+  @Get()
+  findByQuery(
     @Query() policySearchCriteriaDto: PolicySearchCriteriaDto
   ) {
     return this.policiesService.findByQuery(policySearchCriteriaDto);
