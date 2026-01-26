@@ -6,6 +6,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { Cron } from '@nestjs/schedule';
 import { QqDateSearchDto } from './dto/qq-date-search.dto';
+import { PolicyNumbersDto } from './dto/policy-numbers.dto';
 import { ContactResponse, PolicyResponse } from './interfaces';
 import { OfficesService } from '../offices/offices.service';
 import { UsersService } from '../users/users.service';
@@ -302,6 +303,36 @@ export class QqcatalystService {
 
   /// Trabajo con Polizas
 
+  async insertPolicyManually({ policyNumbers }: PolicyNumbersDto) {
+    if (!this.accessToken) {
+      this.accessToken = await this.getAccessToken();
+    }
+    const headers = {
+      Authorization: `Bearer ${this.accessToken}`,
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      const policiesToSave = await this.httpService.axiosRef.post(
+        `${this.apiURL}Policies/SearchByPolicyNumbers`,
+        policyNumbers,
+        { headers },
+      );
+      const preparedPolicies = await this.preparePoliciesData(
+        policiesToSave.data.PoliciesFound
+      );
+      return this.savePoliciesData(preparedPolicies);
+    } catch (error) {
+      this.logger.error(
+        `Error fetching SearchByPolicyNumbers from QQCatalyst:`,
+        error,
+      );
+      throw new InternalServerErrorException(
+        `Error fetching SearchByPolicyNumbers from QQCatalyst`,
+      );
+    }
+  }
+
   async policiesProcessing({ startDate, endDate }: QqDateSearchDto) {
     const { Data, TotalItems } = await this.getQQCatalystRequest(
       `${this.apiURL}Policies/LastModifiedCreated?startDate=${startDate}&endDate=${endDate}&pageSize=100&pageNumber=1`,
@@ -450,7 +481,7 @@ export class QqcatalystService {
             }
           } else {
             // Si no existe una póliza con la misma fecha de vigencia, crear una nueva
-            if (!policyDto.isDeleted) {
+            if (!policyDto.isDeleted && policyDto.status !== 'P') {
               await this.policiesService.create({
                 ...policyDto,
                 person: personId,
@@ -459,7 +490,7 @@ export class QqcatalystService {
             }
           }
         } else {
-          if (!policyDto.isDeleted) {
+          if (!policyDto.isDeleted && policyDto.status !== 'P') {
             await this.policiesService.create({
               ...policyDto,
               person: personId,
