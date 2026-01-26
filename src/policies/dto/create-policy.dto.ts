@@ -24,7 +24,7 @@ export class CreatePolicyDto {
   })
   @Type(() => Date)
   @IsDate()
-  readonly effectiveDate: Date;
+  effectiveDate: Date;
 
   @ApiProperty({
     description: 'The start date in YYYY-MM-DD format',
@@ -34,7 +34,7 @@ export class CreatePolicyDto {
   })
   @Type(() => Date)
   @IsDate()
-  readonly expirationDate: Date;
+  expirationDate: Date;
 
   @ApiProperty({
     description: 'The start date in YYYY-MM-DD format',
@@ -45,7 +45,7 @@ export class CreatePolicyDto {
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  readonly cancellationDate?: Date;
+  cancellationDate?: Date;
 
   @ApiProperty()
   @IsString()

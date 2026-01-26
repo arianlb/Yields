@@ -41,6 +41,33 @@ export class PoliciesService {
       );
     }
 
+    const effectiveDate = new Date(createPolicyDto.effectiveDate);
+    effectiveDate.setHours(0, 0, 0, 0);
+    const expirationDate = new Date(createPolicyDto.expirationDate);
+    expirationDate.setHours(0, 0, 0, 0);
+    if (effectiveDate.getTime() >= expirationDate.getTime()) {
+      throw new BadRequestException(
+        `Expiration date must be greater than effective date`,
+      );
+    }
+    createPolicyDto.effectiveDate = effectiveDate;
+    createPolicyDto.expirationDate = expirationDate;
+
+    if (createPolicyDto.cancellationDate) {
+      const cancellation = new Date(createPolicyDto.cancellationDate);
+      cancellation.setHours(0, 0, 0, 0);
+      const cancellationDate = cancellation.getTime();
+      createPolicyDto.cancellationDate = cancellation;
+      if (
+        cancellationDate < effectiveDate.getTime() ||
+        cancellationDate > expirationDate.getTime()
+      ) {
+        throw new BadRequestException(
+          `Cancellation date must be between effective date and expiration date`,
+        );
+      }
+    }
+
     return this.policyModel.create({
       ...createPolicyDto,
       office: person.office,

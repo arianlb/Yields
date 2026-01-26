@@ -6,7 +6,7 @@ import { Office } from '../../offices/schemas/office.schema';
 
 @Schema()
 export class Policy {
-  @Prop()
+  @Prop({ required: true })
   policyNumber: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Office' })
@@ -21,13 +21,13 @@ export class Policy {
   @Prop()
   cancellationDate: Date;
 
-  @Prop()
+  @Prop({ required: true })
   carrier: string;
   
-  @Prop()
+  @Prop({ required: true })
   line: string;
 
-  @Prop()
+  @Prop({ required: true })
   premium: number;
 
   @Prop({ default: false })
