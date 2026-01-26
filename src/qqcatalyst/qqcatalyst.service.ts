@@ -318,9 +318,10 @@ export class QqcatalystService {
         policyNumbers,
         { headers },
       );
-      const preparedPolicies = await this.preparePoliciesData(
-        policiesToSave.data.PoliciesFound
+      const policies = policiesToSave.data.PoliciesFound.filter((policy) =>
+        this.isValidStatus(policy.Status),
       );
+      const preparedPolicies = await this.preparePoliciesData(policies);
       return this.savePoliciesData(preparedPolicies);
     } catch (error) {
       this.logger.error(
@@ -363,12 +364,13 @@ export class QqcatalystService {
       ) {
         if (
           this.policiesCacheList[i].DateLastModified !==
-            policy.DateLastModified
+            policy.DateLastModified &&
+          this.isValidStatus(policy.Status)
         ) {
           response.push(policy);
         }
         i++;
-      } else {
+      } else if (this.isValidStatus(policy.Status)) {
         response.push(policy);
       }
     }
@@ -570,6 +572,11 @@ export class QqcatalystService {
       }
     }
     return false;
+  }
+
+  private isValidStatus(status: string): boolean {
+    const validStatuses = ['A', 'C', 'D', 'E'];
+    return validStatuses.includes(status);
   }
 
 

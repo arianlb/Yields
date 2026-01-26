@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Matches,
   MinLength,
 } from 'class-validator';
 
@@ -73,4 +74,12 @@ export class CreatePolicyDto {
   @IsOptional()
   @IsInt()
   readonly qqPolicyId?: number;
+
+  @ApiProperty()
+  @Matches(/^(A|C|D|E)$/, {
+    message: 'status must be one of the following values: A, C, D, E',
+  })
+  @IsOptional()
+  @IsString()
+  readonly status?: string;
 }
