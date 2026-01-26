@@ -130,22 +130,39 @@ export class PoliciesService {
   async update(id: string, updatePolicyDto: UpdatePolicyDto): Promise<Policy> {
     const { person, ...restDto } = updatePolicyDto;
     let policy;
-    if (restDto.cancellationDate) {
+    if (restDto.cancellationDate || restDto.effectiveDate || restDto.expirationDate) {
       policy = await this.policyModel.findById(id);
       
       if (!policy) {
         throw new NotFoundException(`Policy with id ${id} not found`);
       }
-      
-      const cancellation = new Date(restDto.cancellationDate);
-      cancellation.setHours(0, 0, 0, 0);
-      const cancellationDate = cancellation.getTime();
-      const effectiveDate = policy.effectiveDate.getTime();
-      const expirationDate = policy.expirationDate.getTime();
-      if (cancellationDate < effectiveDate || cancellationDate > expirationDate) {
+
+      const newPolicyData = {
+        effectiveDate: restDto.effectiveDate || policy.effectiveDate,
+        expirationDate: restDto.expirationDate || policy.expirationDate,
+      };
+
+      const effectiveDate = new Date(newPolicyData.effectiveDate);
+      effectiveDate.setHours(0, 0, 0, 0);
+      const expirationDate = new Date(newPolicyData.expirationDate);
+      expirationDate.setHours(0, 0, 0, 0);
+      if (effectiveDate.getTime() >= expirationDate.getTime()) {
         throw new BadRequestException(
-          `Cancellation date must be between effective date and expiration date`,
+          `Expiration date must be greater than effective date`,
         );
+      }
+      restDto.effectiveDate = effectiveDate;
+      restDto.expirationDate = expirationDate;
+      
+      if (restDto.cancellationDate) {
+        const cancellation = new Date(restDto.cancellationDate);
+        cancellation.setHours(0, 0, 0, 0);
+        if (cancellation.getTime() < effectiveDate.getTime() || cancellation.getTime() > expirationDate.getTime()) {
+          throw new BadRequestException(
+            `Cancellation date must be between effective date and expiration date`,
+          );
+        }
+        restDto.cancellationDate = cancellation;
       }
     }
     
