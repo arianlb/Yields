@@ -33,6 +33,9 @@ export class Policy {
   @Prop({ default: false })
   renewed: boolean;
 
+  @Prop()
+  renewalAgent: string;
+
   @Prop({ default: 'A' })
   status: string;
 
@@ -43,7 +46,7 @@ export class Policy {
   salesAgent: User;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  renewalAgent: User;
+  assignedAgent: User;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Person' })
   person: Person;

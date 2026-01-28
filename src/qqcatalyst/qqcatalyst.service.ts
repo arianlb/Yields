@@ -407,6 +407,7 @@ export class QqcatalystService {
         status: policy.Status,
         priorPolicy: policy.PriorPolicyID,
         isDeleted: policy.IsDeleted,
+        agentName: policy.AgentName,
       };
       preparedPolicies.push(preparedPolicy);
     }
@@ -449,7 +450,7 @@ export class QqcatalystService {
         
         //Si la poliza tiene PriorPolicyId y se verifica que esta poliza es un Renewal, se busca la póliza anterior para marcarla como renovada
         if (policyDto.priorPolicy && !policyDto.isDeleted && await this.isPolicyRenewal(policyDto.qqPolicyId)) {
-          this.editRenewedStatus(policyDto.priorPolicy, existingPerson[0].office, true);
+          this.editRenewedStatus(policyDto.priorPolicy, existingPerson[0].office, true, policyDto.agentName);
         }
         
         const existingPolicy = await this.policiesService.findByQuery({
@@ -470,13 +471,10 @@ export class QqcatalystService {
                 },
               );
             } else {
-              //Si la poliza tiene PriorPolicyId y se verifica que esta poliza es un Renewal,
-              //Se busca si el cliente no tiene mas polizas que sean renovación de la poliza anterior y si no las tiene,
-              //Se desmarca como renovada la poliza anterior.
+              //Si la poliza eliminada tiene PriorPolicyId y se verifica que esta poliza es un Renewal,
+              //Se marca como no renovada la poliza anterior.
               if (policyDto.priorPolicy && await this.isPolicyRenewal(policyDto.qqPolicyId)) {
-                if (!await this.isAnotherRenewalExists(policyDto.priorPolicy, policyDto.customer)) {
-                  this.editRenewedStatus(policyDto.priorPolicy, existingPerson[0].office, false);
-                }
+                this.editRenewedStatus(policyDto.priorPolicy, existingPerson[0].office, false);
               }
                 
               await this.policiesService.remove(policy._id.toString());
@@ -542,7 +540,7 @@ export class QqcatalystService {
     return policy.BusinessType === 'R';
   }
 
-  private async editRenewedStatus(priorPolicyId: number, office: string, renewed: boolean) {
+  private async editRenewedStatus(priorPolicyId: number, office: string, renewed: boolean, renewalAgent = '') {
     const existingPolicies = await this.policiesService.findByQuery({
       office,
       qqPolicyId: priorPolicyId,
@@ -551,28 +549,29 @@ export class QqcatalystService {
       const policy = existingPolicies[0];
       await this.policiesService.update(policy._id.toString(), {
         renewed,
+        renewalAgent,
       });
     }
   }
 
-  private async isAnotherRenewalExists(priorPolicyId: number, customerId: number): Promise<boolean> {
-    const { Data } = await this.getQQCatalystRequest(
-      `${this.apiURL}Policies/ByCustomer/${customerId}`,
-      'PoliciesByCustomer',
-    );
-    for (const policy of Data) {
-      if (policy.PolicyId !== priorPolicyId && policy.Status !== 'E') {
-        const newPolicy = await this.getQQCatalystRequest(
-          `${this.apiURL}PolicySummaryForApi?policyID=${policy.PolicyId}`,
-          'PolicySummaryForApi',
-        );
-        if (newPolicy.PriorPolicyId === priorPolicyId && newPolicy.BusinessType === 'R') {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+  // private async isAnotherRenewalExists(priorPolicyId: number, customerId: number): Promise<boolean> {
+  //   const { Data } = await this.getQQCatalystRequest(
+  //     `${this.apiURL}Policies/ByCustomer/${customerId}`,
+  //     'PoliciesByCustomer',
+  //   );
+  //   for (const policy of Data) {
+  //     if (policy.PolicyId !== priorPolicyId && policy.Status !== 'E') {
+  //       const newPolicy = await this.getQQCatalystRequest(
+  //         `${this.apiURL}PolicySummaryForApi?policyID=${policy.PolicyId}`,
+  //         'PolicySummaryForApi',
+  //       );
+  //       if (newPolicy.PriorPolicyId === priorPolicyId && newPolicy.BusinessType === 'R') {
+  //         return true;
+  //       }
+  //     }
+  //   }
+  //   return false;
+  // }
 
   private isValidStatus(status: string): boolean {
     const validStatuses = ['A', 'C', 'D', 'E'];

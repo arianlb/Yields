@@ -28,12 +28,20 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Get('office/:officeId')
+  @Get('all/office/:officeId')
   findAll(
     @Param('officeId', ParseMongoIdPipe) officeId: string,
     @Query() paginationDto: PaginationDto,
   ) {
     return this.usersService.findAllByOffice(officeId, paginationDto);
+  }
+
+  @Get('office/:officeId')
+  findAllActive(
+    @Param('officeId', ParseMongoIdPipe) officeId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.usersService.findAllActiveByOffice(officeId);
   }
 
   @Get(':id')

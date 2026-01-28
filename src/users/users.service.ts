@@ -66,6 +66,14 @@ export class UsersService {
     //Mirar este metodo que se puede optimizar y no subcribirse a dos promesas!!!!
   }
 
+  async findAllActiveByOffice(officeId: string): Promise<User[]> {
+    return this.userModel
+      .find({ offices: officeId, isActive: true })
+      .populate('offices', 'name')
+      .lean()
+      .exec();
+  }
+
   async findOne(id: string): Promise<User> {
     const user = await this.userModel.findById(id).lean().exec();
     if (!user) {
