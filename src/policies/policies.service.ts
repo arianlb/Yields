@@ -186,7 +186,7 @@ export class PoliciesService {
     const updatedPolicies = await this.policyModel
       .updateMany(
         { _id: { $in: policyIds }, office: officeId },
-        { $set: { renewalAgent: agentId } },
+        { $set: { assignedAgent: agentId } },
         { new: true },
       )
       .lean()
