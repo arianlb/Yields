@@ -91,7 +91,7 @@ export class PoliciesService {
         status: { $ne: 'C' },
       })
       .select(
-        'policyNumber carrier line premium effectiveDate expirationDate renewed status notes person assignedAgent',
+        'policyNumber carrier line premium effectiveDate expirationDate renewed renewalAgent status notes person assignedAgent',
       )
       .populate('person', 'name phone')
       .populate('assignedAgent', 'name')
