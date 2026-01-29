@@ -91,10 +91,10 @@ export class PoliciesService {
         status: { $ne: 'C' },
       })
       .select(
-        'policyNumber carrier line premium effectiveDate expirationDate renewed status notes person renewalAgent',
+        'policyNumber carrier line premium effectiveDate expirationDate renewed status notes person assignedAgent',
       )
       .populate('person', 'name phone')
-      .populate('renewalAgent', 'name')
+      .populate('assignedAgent', 'name')
       .sort({ expirationDate: 1 })
       .lean()
       .exec();
