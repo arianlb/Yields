@@ -59,7 +59,7 @@ export class PersonsService {
     if (createPersonDto.name) {
       createPersonDto.name = this.capitalizeFirstLetter(createPersonDto.name);
     }
-    return this.personModel.create(createPersonDto);
+    return (await this.personModel.create(createPersonDto)).populate('agent', 'name');
   }
 
   async findAll(
@@ -80,11 +80,11 @@ export class PersonsService {
     if (searchCriteriaDto.name) {
       searchCriteriaDto.name = this.capitalizeFirstLetter(searchCriteriaDto.name);
     }
-    return this.personModel.find(searchCriteriaDto).lean().exec();
+    return this.personModel.find(searchCriteriaDto).populate('agent', 'name').lean().exec();
   }
 
   async findOne(id: string): Promise<Person> {
-    const person = await this.personModel.findById(id).lean().exec();
+    const person = await this.personModel.findById(id).populate('agent', 'name').lean().exec();
     if (!person) {
       throw new NotFoundException(`Person with id ${id} not found`);
     }
@@ -97,6 +97,7 @@ export class PersonsService {
     }
     const person = this.personModel
       .findByIdAndUpdate(id, updatePersonDto, { new: true })
+      .populate('agent', 'name')
       .lean()
       .exec();
     if (!person) {

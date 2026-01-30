@@ -1,9 +1,11 @@
-import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
+import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { WebSocketsService } from './web-sockets.service';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({ cors: true })
 export class WebSocketsGateway {
+  @WebSocketServer() wss: Server;
+
   constructor(private readonly webSocketsService: WebSocketsService) {}
 
   @SubscribeMessage('change-person')
@@ -14,5 +16,13 @@ export class WebSocketsGateway {
   @SubscribeMessage('change-policy')
   handleChangePolicy(client: Socket, payload: any) {
     client.broadcast.emit('change-policy', payload);
+  }
+
+  emitChangePerson(payload: any) {
+    this.wss.emit('change-person', payload);
+  }
+
+  emitChangePolicy(payload: any) {
+    this.wss.emit('change-policy', payload);
   }
 }

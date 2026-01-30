@@ -7,6 +7,7 @@ import { OfficesModule } from '../offices/offices.module';
 import { UsersModule } from '../users/users.module';
 import { PersonsModule } from '../persons/persons.module';
 import { PoliciesModule } from '../policies/policies.module';
+import { WebSocketsModule } from '../web-sockets/web-sockets.module';
 
 @Module({
   controllers: [QqcatalystController],
@@ -18,6 +19,7 @@ import { PoliciesModule } from '../policies/policies.module';
     UsersModule,
     PersonsModule,
     PoliciesModule,
+    WebSocketsModule,
   ],
 })
 export class QqcatalystModule {}

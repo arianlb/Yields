@@ -12,6 +12,7 @@ import { OfficesService } from '../offices/offices.service';
 import { UsersService } from '../users/users.service';
 import { PersonsService } from '../persons/persons.service';
 import { PoliciesService } from '../policies/policies.service';
+import { WebSocketsGateway } from '../web-sockets/web-sockets.gateway';
 
 @Injectable()
 export class QqcatalystService {
@@ -35,6 +36,7 @@ export class QqcatalystService {
     private readonly usersService: UsersService,
     private readonly personsService: PersonsService,
     private readonly policiesService: PoliciesService,
+    private readonly webSocketGateway: WebSocketsGateway,
   ) {}
 
   private async getAccessToken() {
@@ -627,9 +629,10 @@ export class QqcatalystService {
   //   this.contactCacheList = [];
   //   const result = await this.contactsProcessing({ startDate, endDate });
   //   this.logger.log(result);
+  //   this.contactCacheList = [];
+  //   this.policiesCacheList = [];
   //   const policiesResult = await this.policiesProcessing({ startDate, endDate });
   //   this.logger.log(policiesResult);
-  //   this.contactCacheList = [];
   //   this.policiesCacheList = [];
   // }
 }
