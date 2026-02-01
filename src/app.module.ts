@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { WebSocketsModule } from './web-sockets/web-sockets.module';
 import { QqcatalystModule } from './qqcatalyst/qqcatalyst.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { DatetimeModule } from './datetime/datetime.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     WebSocketsModule,
     QqcatalystModule,
     ScheduleModule.forRoot(),
+    DatetimeModule,
   ],
 })
 export class AppModule {}

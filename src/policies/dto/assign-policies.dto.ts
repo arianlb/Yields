@@ -5,7 +5,7 @@ export class AssignPoliciesDto {
   @ApiProperty()
   @IsMongoId()
   readonly agentId: string;
-  
+
   @ApiProperty()
   @IsMongoId()
   readonly officeId: string;

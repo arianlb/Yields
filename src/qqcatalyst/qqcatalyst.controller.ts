@@ -16,7 +16,7 @@ export class QqcatalystController {
   processContacts(@Query() qqDateSearchDto: QqDateSearchDto) {
     return this.qqcatalystService.contactsProcessing(qqDateSearchDto);
   }
-  
+
   @Auth()
   @Get('/policies')
   processPolicies(@Query() qqDateSearchDto: QqDateSearchDto) {

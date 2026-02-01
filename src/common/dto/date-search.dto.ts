@@ -4,20 +4,20 @@ import { IsDate } from 'class-validator';
 
 export class DateSearchDto {
   @ApiProperty({
-    description: 'The start date in YYYY-MM-DD format',
+    description: 'Start date (business date in America/New_York)',
     type: String,
-    format: 'date',
-    example: '2024-12-01',
+    format: 'date-time',
+    example: '2026-01-31',
   })
   @Type(() => Date)
   @IsDate()
   readonly startDate: Date;
 
   @ApiProperty({
-    description: 'The start date in YYYY-MM-DD format',
+    description: 'End date (business date in America/New_York)',
     type: String,
-    format: 'date',
-    example: '2024-12-31',
+    format: 'date-time',
+    example: '2026-01-31',
   })
   @Type(() => Date)
   @IsDate()

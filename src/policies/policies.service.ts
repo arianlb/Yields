@@ -10,6 +10,7 @@ import { Model } from 'mongoose';
 import { Policy } from './schemas/policy.schema';
 import { UsersService } from '../users/users.service';
 import { PersonsService } from '../persons/persons.service';
+import { DatetimeService } from '../datetime/datetime.service';
 import { DateSearchDto } from '../common/dto/date-search.dto';
 import { AssignPoliciesDto } from './dto/assign-policies.dto';
 import { PolicySearchCriteriaDto } from './dto/policy-search-criteria.dto';
@@ -21,6 +22,7 @@ export class PoliciesService {
     private readonly policyModel: Model<Policy>,
     private readonly usersService: UsersService,
     private readonly personsService: PersonsService,
+    private readonly datetimeService: DatetimeService,
   ) {}
 
   async create(createPolicyDto: CreatePolicyDto): Promise<Policy> {
@@ -75,6 +77,12 @@ export class PoliciesService {
   }
 
   async findByQuery(policySearchCriteriaDto: PolicySearchCriteriaDto) {
+    if (policySearchCriteriaDto.effectiveDate) {
+      const effectiveDateUtc = this.datetimeService.startDateToUtcDayRange(
+        policySearchCriteriaDto.effectiveDate,
+      );
+      policySearchCriteriaDto.effectiveDate = effectiveDateUtc;
+    }
     return this.policyModel.find(policySearchCriteriaDto).lean().exec();
   }
 
@@ -82,12 +90,12 @@ export class PoliciesService {
     officeId: string,
     { startDate, endDate }: DateSearchDto,
   ): Promise<Policy[]> {
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
+    const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
+    const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
     return this.policyModel
       .find({
         office: officeId,
-        expirationDate: { $gte: startDate, $lte: endDate },
+        expirationDate: { $gte: startDateUtc, $lte: endDateUtc },
         status: { $ne: 'C' },
       })
       .select(
@@ -104,12 +112,12 @@ export class PoliciesService {
     officeId: string,
     { startDate, endDate }: DateSearchDto,
   ): Promise<Policy[]> {
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
+    const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
+    const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
     return this.policyModel
       .find({
         office: officeId,
-        cancellationDate: { $gte: startDate, $lte: endDate },
+        cancellationDate: { $gte: startDateUtc, $lte: endDateUtc },
         status: 'C',
       })
       .select('policyNumber carrier line premium cancellationDate notes person')
@@ -130,9 +138,13 @@ export class PoliciesService {
   async update(id: string, updatePolicyDto: UpdatePolicyDto): Promise<Policy> {
     const { person, ...restDto } = updatePolicyDto;
     let policy;
-    if (restDto.cancellationDate || restDto.effectiveDate || restDto.expirationDate) {
+    if (
+      restDto.cancellationDate ||
+      restDto.effectiveDate ||
+      restDto.expirationDate
+    ) {
       policy = await this.policyModel.findById(id);
-      
+
       if (!policy) {
         throw new NotFoundException(`Policy with id ${id} not found`);
       }
@@ -153,11 +165,14 @@ export class PoliciesService {
       }
       restDto.effectiveDate = effectiveDate;
       restDto.expirationDate = expirationDate;
-      
+
       if (restDto.cancellationDate) {
         const cancellation = new Date(restDto.cancellationDate);
         cancellation.setHours(0, 0, 0, 0);
-        if (cancellation.getTime() < effectiveDate.getTime() || cancellation.getTime() > expirationDate.getTime()) {
+        if (
+          cancellation.getTime() < effectiveDate.getTime() ||
+          cancellation.getTime() > expirationDate.getTime()
+        ) {
           throw new BadRequestException(
             `Cancellation date must be between effective date and expiration date`,
           );
@@ -165,7 +180,7 @@ export class PoliciesService {
         restDto.cancellationDate = cancellation;
       }
     }
-    
+
     policy = this.policyModel
       .findByIdAndUpdate(id, restDto, { new: true })
       .lean()
@@ -176,9 +191,15 @@ export class PoliciesService {
     return policy;
   }
 
-  async assignPoliciesToAgent({agentId, officeId, policyIds}: AssignPoliciesDto): Promise<Policy[]> {
+  async assignPoliciesToAgent({
+    agentId,
+    officeId,
+    policyIds,
+  }: AssignPoliciesDto): Promise<Policy[]> {
     const agent = await this.usersService.findOne(agentId);
-    if (!agent.offices.find((offId) => (offId as any).equals(officeId as any))) {
+    if (
+      !agent.offices.find((offId) => (offId as any).equals(officeId as any))
+    ) {
       throw new BadRequestException(
         `User with id ${agentId} does not have access to office with id ${officeId}`,
       );
@@ -193,9 +214,7 @@ export class PoliciesService {
       .exec();
 
     if (updatedPolicies.matchedCount === 0) {
-      throw new NotFoundException(
-        `No policies found with the provided ids`,
-      );
+      throw new NotFoundException(`No policies found with the provided ids`);
     }
 
     return this.policyModel

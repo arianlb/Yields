@@ -27,7 +27,7 @@ export class AuthController {
   check(@GetUser() user: UserDocument) {
     return this.authService.checkAuthStatus(user);
   }
-  
+
   @Get('server-check')
   server_check() {
     return 'Server is running properly';

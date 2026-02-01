@@ -4,6 +4,7 @@ import { PersonsService } from './persons.service';
 import { PersonsController } from './persons.controller';
 import { Person, PersonSchema } from './schemas/person.schema';
 import { AuthModule } from '../auth/auth.module';
+import { DatetimeModule } from '../datetime/datetime.module';
 import { OfficesModule } from '../offices/offices.module';
 import { UsersModule } from '../users/users.module';
 
@@ -13,6 +14,7 @@ import { UsersModule } from '../users/users.module';
   imports: [
     MongooseModule.forFeature([{ name: Person.name, schema: PersonSchema }]),
     AuthModule,
+    DatetimeModule,
     OfficesModule,
     UsersModule,
   ],

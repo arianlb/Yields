@@ -52,9 +52,7 @@ export class PoliciesController {
   }
 
   @Get()
-  findByQuery(
-    @Query() policySearchCriteriaDto: PolicySearchCriteriaDto
-  ) {
+  findByQuery(@Query() policySearchCriteriaDto: PolicySearchCriteriaDto) {
     return this.policiesService.findByQuery(policySearchCriteriaDto);
   }
 

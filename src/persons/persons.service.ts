@@ -13,6 +13,7 @@ import { Person } from './schemas/person.schema';
 import { OfficesService } from '../offices/offices.service';
 import { UsersService } from '../users/users.service';
 import { Office } from '../offices/schemas/office.schema';
+import { DatetimeService } from '../datetime/datetime.service';
 
 @Injectable()
 export class PersonsService {
@@ -21,6 +22,7 @@ export class PersonsService {
     private readonly personModel: Model<Person>,
     private readonly officesService: OfficesService,
     private readonly usersService: UsersService,
+    private readonly datetimeService: DatetimeService,
   ) {}
 
   async create(createPersonDto: CreatePersonDto): Promise<Person> {
@@ -59,17 +61,23 @@ export class PersonsService {
     if (createPersonDto.name) {
       createPersonDto.name = this.capitalizeFirstLetter(createPersonDto.name);
     }
-    return (await this.personModel.create(createPersonDto)).populate('agent', 'name');
+    return (await this.personModel.create(createPersonDto)).populate(
+      'agent',
+      'name',
+    );
   }
 
   async findAll(
     officeId: string,
     { startDate, endDate }: DateSearchDto,
   ): Promise<Person[]> {
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
+    const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
+    const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
     return this.personModel
-      .find({ office: officeId, since: { $gte: startDate, $lte: endDate } })
+      .find({
+        office: officeId,
+        since: { $gte: startDateUtc, $lte: endDateUtc },
+      })
       .populate('agent', 'name')
       .sort({ since: 1 })
       .lean()
@@ -78,13 +86,23 @@ export class PersonsService {
 
   async findByQuery(searchCriteriaDto: SearchCriteriaDto) {
     if (searchCriteriaDto.name) {
-      searchCriteriaDto.name = this.capitalizeFirstLetter(searchCriteriaDto.name);
+      searchCriteriaDto.name = this.capitalizeFirstLetter(
+        searchCriteriaDto.name,
+      );
     }
-    return this.personModel.find(searchCriteriaDto).populate('agent', 'name').lean().exec();
+    return this.personModel
+      .find(searchCriteriaDto)
+      .populate('agent', 'name')
+      .lean()
+      .exec();
   }
 
   async findOne(id: string): Promise<Person> {
-    const person = await this.personModel.findById(id).populate('agent', 'name').lean().exec();
+    const person = await this.personModel
+      .findById(id)
+      .populate('agent', 'name')
+      .lean()
+      .exec();
     if (!person) {
       throw new NotFoundException(`Person with id ${id} not found`);
     }

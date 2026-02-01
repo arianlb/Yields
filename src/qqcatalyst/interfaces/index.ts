@@ -9,5 +9,8 @@ export {
   PoliciesByClientResponse,
   PolicyByClientResponse,
 } from './policies-by-client.interface';
-export { PoliciesListResponse, PolicyResponse } from './policies-list.interface';
+export {
+  PoliciesListResponse,
+  PolicyResponse,
+} from './policies-list.interface';
 export { PolicyAdjustmentsResponse } from './policy-adjustments.interface';

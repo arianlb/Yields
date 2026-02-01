@@ -6,6 +6,7 @@ import { Policy, PolicySchema } from './schemas/policy.schema';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { PersonsModule } from '../persons/persons.module';
+import { DatetimeModule } from '../datetime/datetime.module';
 
 @Module({
   controllers: [PoliciesController],
@@ -15,6 +16,7 @@ import { PersonsModule } from '../persons/persons.module';
     AuthModule,
     UsersModule,
     PersonsModule,
+    DatetimeModule,
   ],
   exports: [PoliciesService],
 })

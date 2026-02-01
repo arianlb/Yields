@@ -23,7 +23,7 @@ export class Policy {
 
   @Prop({ required: true })
   carrier: string;
-  
+
   @Prop({ required: true })
   line: string;
 

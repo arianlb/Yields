@@ -23,15 +23,15 @@ export class PolicySearchCriteriaDto {
   policyNumber?: string;
 
   @ApiProperty({
-    description: 'The start date in YYYY-MM-DD format',
+    description: 'Instant in time (must include timezone or be UTC)',
     type: String,
-    format: 'date',
-    example: '2026-12-26',
+    format: 'date-time',
+    example: '2026-01-31T16:30:49+02:00',
   })
   @Type(() => Date)
   @IsOptional()
   @IsDate()
-  readonly effectiveDate?: Date;
+  effectiveDate?: Date;
 
   @ApiProperty()
   @IsOptional()
