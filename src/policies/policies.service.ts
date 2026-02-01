@@ -70,10 +70,10 @@ export class PoliciesService {
       }
     }
 
-    return this.policyModel.create({
+    return (await (await this.policyModel.create({
       ...createPolicyDto,
       office: person.office,
-    });
+    })).populate('person', 'name phone')).populate('assignedAgent', 'name');
   }
 
   async findByQuery(policySearchCriteriaDto: PolicySearchCriteriaDto) {
@@ -183,6 +183,8 @@ export class PoliciesService {
 
     policy = this.policyModel
       .findByIdAndUpdate(id, restDto, { new: true })
+      .populate('person', 'name phone')
+      .populate('assignedAgent', 'name')
       .lean()
       .exec();
     if (!policy) {
@@ -219,6 +221,8 @@ export class PoliciesService {
 
     return this.policyModel
       .find({ _id: { $in: policyIds } })
+      .populate('assignedAgent', 'name')
+      .populate('person', 'name phone')
       .lean()
       .exec();
   }
