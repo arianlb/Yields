@@ -458,7 +458,6 @@ export class QqcatalystService {
         customerName: policy.CustomerName,
         status: policy.Status,
         priorPolicy: policy.PriorPolicyID,
-        isDeleted: policy.IsDeleted,
         agentName: policy.AgentName,
       };
       preparedPolicies.push(preparedPolicy);
@@ -507,7 +506,7 @@ export class QqcatalystService {
         //Si la poliza tiene PriorPolicyId y se verifica que esta poliza es un Renewal, se busca la póliza anterior para marcarla como renovada
         if (
           policyDto.priorPolicy &&
-          !policyDto.isDeleted &&
+          policyDto.Status !== 'D' &&
           (await this.isPolicyRenewal(policyDto.qqPolicyId))
         ) {
           this.editRenewedStatus(
@@ -524,7 +523,7 @@ export class QqcatalystService {
         });
         if (existingPolicy) {
           // Si la póliza ya existe, actualizarla
-          if (!policyDto.isDeleted) {
+          if (policyDto.Status !== 'D') {
             const updatedPolicy = await this.policiesService.update(
               existingPolicy._id.toString(),
               {
@@ -585,7 +584,7 @@ export class QqcatalystService {
             this.webSocketGateway.emitChangePolicy(payload);
           }
         } else {
-          if (!policyDto.isDeleted && policyDto.status !== 'P') {
+          if (policyDto.Status !== 'D' && policyDto.Status !== 'P') {
             const newPolicy = await this.policiesService.create({
               ...policyDto,
               person: personId,
@@ -642,11 +641,11 @@ export class QqcatalystService {
   }
 
   private async isPolicyRenewal(qqPolicyId: number): Promise<boolean> {
-    const policy = await this.getQQCatalystRequest(
-      `${this.apiURL}PolicySummaryForApi?policyID=${qqPolicyId}`,
-      'PolicySummaryForApi',
+    const [policy] = await this.getQQCatalystRequest(
+      `${this.apiURL}Policies/${qqPolicyId}/PolicyInfo`,
+      'PolicyInfo',
     );
-    return policy.BusinessType === 'R';
+    return policy ? policy.BusinessType === 'R' : false;
   }
 
   private async editRenewedStatus(
