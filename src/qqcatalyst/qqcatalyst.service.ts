@@ -518,102 +518,71 @@ export class QqcatalystService {
           );
         }
 
-        const existingPolicy = await this.policiesService.findByQuery({
+        const [existingPolicy] = await this.policiesService.findByQuery({
           office: existingPerson[0].office,
-          policyNumber: policyDto.policyNumber,
+          qqPolicyId: policyDto.qqPolicyId,
         });
         if (existingPolicy) {
-          //Si hay más de una póliza con el mismo número, se compara la fecha de vigencia para decidir si se actualiza o crea una nueva
-          const policy = existingPolicy.find(
-            (p) =>
-              p.effectiveDate.getTime() ===
-              new Date(policyDto.effectiveDate).getTime(),
-          );
-          if (policy) {
-            // Si la póliza ya existe con la misma fecha de vigencia, actualizarla
-            if (!policyDto.isDeleted) {
-              const updatedPolicy = await this.policiesService.update(policy._id.toString(), {
+          // Si la póliza ya existe, actualizarla
+          if (!policyDto.isDeleted) {
+            const updatedPolicy = await this.policiesService.update(
+              existingPolicy._id.toString(),
+              {
                 ...policyDto,
                 person: personId,
-              });
-              const payload = {
-                policy: updatedPolicy,
-                queryKey: [
-                  'policies',
-                  {
-                    office: existingPerson[0].office.toString(),
-                    year: updatedPolicy.expirationDate
-                      .toLocaleDateString('en-CA')
-                      .substring(0, 4),
-                    month: updatedPolicy.expirationDate
-                      .toLocaleDateString('en-CA')
-                      .substring(5, 7),
-                  },
-                ],
-                action: 'update',
-              };
-              this.webSocketGateway.emitChangePolicy(payload);
-            } else {
-              //Si la poliza eliminada tiene PriorPolicyId y se verifica que esta poliza es un Renewal,
-              //Se marca como no renovada la poliza anterior.
-              if (
-                policyDto.priorPolicy &&
-                (await this.isPolicyRenewal(policyDto.qqPolicyId))
-              ) {
-                this.editRenewedStatus(
-                  policyDto.priorPolicy,
-                  existingPerson[0].office,
-                  false,
-                );
-              }
-
-              const policyRemoved = await this.policiesService.remove(
-                policy._id.toString(),
-              );
-              const payload = {
-                policy: policyRemoved,
-                queryKey: [
-                  'policies',
-                  {
-                    office: existingPerson[0].office.toString(),
-                    year: policy.expirationDate
-                      .toLocaleDateString('en-CA')
-                      .substring(0, 4),
-                    month: policy.expirationDate
-                      .toLocaleDateString('en-CA')
-                      .substring(5, 7),
-                  },
-                ],
-                action: 'delete',
-              };
-              this.webSocketGateway.emitChangePolicy(payload);
-            }
+              },
+            );
+            const payload = {
+              policy: updatedPolicy,
+              queryKey: [
+                'policies',
+                {
+                  office: existingPerson[0].office.toString(),
+                  year: updatedPolicy.expirationDate
+                    .toLocaleDateString('en-CA')
+                    .substring(0, 4),
+                  month: updatedPolicy.expirationDate
+                    .toLocaleDateString('en-CA')
+                    .substring(5, 7),
+                },
+              ],
+              action: 'update',
+            };
+            this.webSocketGateway.emitChangePolicy(payload);
           } else {
-            // Si no existe una póliza con la misma fecha de vigencia, crear una nueva
-            if (!policyDto.isDeleted && policyDto.status !== 'P') {
-              const newPolicy = await this.policiesService.create({
-                ...policyDto,
-                person: personId,
-                office: existingPerson[0].office,
-              });
-              const payload = {
-                policy: newPolicy,
-                queryKey: [
-                  'policies',
-                  {
-                    office: existingPerson[0].office.toString(),
-                    year: newPolicy.expirationDate
-                      .toLocaleDateString('en-CA')
-                      .substring(0, 4),
-                    month: newPolicy.expirationDate
-                      .toLocaleDateString('en-CA')
-                      .substring(5, 7),
-                  },
-                ],
-                action: 'create',
-              };
-              this.webSocketGateway.emitChangePolicy(payload);
+            //Si la poliza eliminada tiene PriorPolicyId y se verifica que esta poliza es un Renewal,
+            //Se marca como no renovada la poliza anterior.
+            if (
+              policyDto.priorPolicy &&
+              (await this.isPolicyRenewal(policyDto.qqPolicyId))
+            ) {
+              this.editRenewedStatus(
+                policyDto.priorPolicy,
+                existingPerson[0].office,
+                false,
+              );
             }
+
+            const policyRemoved = await this.policiesService.remove(
+              existingPolicy._id.toString(),
+            );
+            const payload = {
+              policy: policyRemoved,
+              queryKey: [
+                'policies',
+                {
+                  office: existingPerson[0].office.toString(),
+                  year: existingPolicy.expirationDate
+                    .toLocaleDateString('en-CA')
+                    .substring(0, 4),
+                  month: existingPolicy.expirationDate
+                    .toLocaleDateString('en-CA')
+                    .substring(5, 7),
+                },
+              ],
+              action: 'delete',
+            };
+            this.webSocketGateway.emitChangePolicy(payload);
           }
         } else {
           if (!policyDto.isDeleted && policyDto.status !== 'P') {
@@ -774,7 +743,10 @@ export class QqcatalystService {
       const endDate = this.todayInTimeZone('Etc/UTC', 1);
       const result = await this.contactsProcessing({ startDate, endDate });
       this.logger.log(result);
-      const policiesResult = await this.policiesProcessing({ startDate, endDate });
+      const policiesResult = await this.policiesProcessing({
+        startDate,
+        endDate,
+      });
       this.logger.log(policiesResult);
       this.taskRunning = false;
     }
@@ -793,7 +765,10 @@ export class QqcatalystService {
     this.logger.log(result);
     this.contactCacheList = [];
     this.policiesCacheList = [];
-    const policiesResult = await this.policiesProcessing({ startDate, endDate });
+    const policiesResult = await this.policiesProcessing({
+      startDate,
+      endDate,
+    });
     this.logger.log(policiesResult);
     this.policiesCacheList = [];
   }
