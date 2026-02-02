@@ -27,6 +27,7 @@ export class DatetimeService {
   }
 
   dateToUtcDay(date: Date) {
+    date = new Date(date);
     const y = date.getUTCFullYear();
     const m = date.getUTCMonth();
     const d = date.getUTCDate();
