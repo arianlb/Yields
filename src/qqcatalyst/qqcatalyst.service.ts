@@ -167,7 +167,7 @@ export class QqcatalystService {
       const personDto = {
         name: contact.DisplayName,
         phone: contact.Phone,
-        since: contact.CreatedOn,
+        since: contact.CreatedOn + 'Z', //Añado la Z para asegurar que se guarda en UTC
         source: await this.getSource(contact.EntityID, contact.LocationID),
         office: this.offices.find(
           (office) => office.qqOfficeId === contact.LocationID,
@@ -442,8 +442,8 @@ export class QqcatalystService {
     for (const policy of policies) {
       const preparedPolicy = {
         policyNumber: policy.PolicyNumber,
-        effectiveDate: policy.EffectiveDate,
-        expirationDate: policy.ExpirationDate,
+        effectiveDate: policy.EffectiveDate + 'Z', //Añado la Z para asegurar que se guarda en UTC
+        expirationDate: policy.ExpirationDate + 'Z', //Añado la Z para asegurar que se guarda en UTC
         cancellationDate:
           policy.Status === 'C'
             ? await this.getCancelationDate(policy.PolicyId)
@@ -475,7 +475,7 @@ export class QqcatalystService {
       (adjustment) => adjustment.AdjustmentType === 'C',
     );
     return cancellationAdjustment
-      ? cancellationAdjustment.AdjustmentDate
+      ? cancellationAdjustment.AdjustmentDate + 'Z' //Añado la Z para asegurar que se guarda en UTC
       : null;
   }
 
@@ -659,7 +659,7 @@ export class QqcatalystService {
     const personDto = {
       name: contact.DisplayName,
       phone: contact.Phone,
-      since: contact.CreatedOn,
+      since: new Date(contact.CreatedOn + 'Z'), //Añado la Z para asegurar que se guarda en UTC
       source: await this.getSource(contact.EntityID, contact.LocationID),
       office: this.offices.find(
         (office) => office.qqOfficeId === contact.LocationID,
