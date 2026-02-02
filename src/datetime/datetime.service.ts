@@ -26,6 +26,14 @@ export class DatetimeService {
     return finalDate;
   }
 
+  dateToUtcDay(date: Date) {
+    const y = date.getUTCFullYear();
+    const m = date.getUTCMonth();
+    const d = date.getUTCDate();
+
+    return new Date(Date.UTC(y, m, d, 0, 0, 0));
+  }
+  
   startDateToUtcDayRange(date: Date) {
     const y = date.getUTCFullYear();
     const m = date.getUTCMonth();

@@ -43,10 +43,8 @@ export class PoliciesService {
       );
     }
 
-    const effectiveDate = new Date(createPolicyDto.effectiveDate);
-    effectiveDate.setHours(0, 0, 0, 0);
-    const expirationDate = new Date(createPolicyDto.expirationDate);
-    expirationDate.setHours(0, 0, 0, 0);
+    const effectiveDate = this.datetimeService.dateToUtcDay(createPolicyDto.effectiveDate);
+    const expirationDate = this.datetimeService.dateToUtcDay(createPolicyDto.expirationDate);
     if (effectiveDate.getTime() >= expirationDate.getTime()) {
       throw new BadRequestException(
         `Expiration date must be greater than effective date`,
@@ -56,13 +54,11 @@ export class PoliciesService {
     createPolicyDto.expirationDate = expirationDate;
 
     if (createPolicyDto.cancellationDate) {
-      const cancellation = new Date(createPolicyDto.cancellationDate);
-      cancellation.setHours(0, 0, 0, 0);
-      const cancellationDate = cancellation.getTime();
-      createPolicyDto.cancellationDate = cancellation;
+      const cancellationDate = this.datetimeService.dateToUtcDay(createPolicyDto.cancellationDate);
+      createPolicyDto.cancellationDate = cancellationDate;
       if (
-        cancellationDate < effectiveDate.getTime() ||
-        cancellationDate > expirationDate.getTime()
+        cancellationDate.getTime() < effectiveDate.getTime() ||
+        cancellationDate.getTime() > expirationDate.getTime()
       ) {
         throw new BadRequestException(
           `Cancellation date must be between effective date and expiration date`,
@@ -78,7 +74,7 @@ export class PoliciesService {
 
   async findByQuery(policySearchCriteriaDto: PolicySearchCriteriaDto) {
     if (policySearchCriteriaDto.effectiveDate) {
-      const effectiveDateUtc = this.datetimeService.startDateToUtcDayRange(
+      const effectiveDateUtc = this.datetimeService.dateToUtcDay(
         policySearchCriteriaDto.effectiveDate,
       );
       policySearchCriteriaDto.effectiveDate = effectiveDateUtc;
@@ -90,8 +86,8 @@ export class PoliciesService {
     officeId: string,
     { startDate, endDate }: DateSearchDto,
   ): Promise<Policy[]> {
-    const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
-    const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
+    const startDateUtc = this.datetimeService.dateToUtcDay(startDate);
+    const endDateUtc = this.datetimeService.dateToUtcDay(endDate);
     return this.policyModel
       .find({
         office: officeId,
@@ -112,8 +108,8 @@ export class PoliciesService {
     officeId: string,
     { startDate, endDate }: DateSearchDto,
   ): Promise<Policy[]> {
-    const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
-    const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
+    const startDateUtc = this.datetimeService.dateToUtcDay(startDate);
+    const endDateUtc = this.datetimeService.dateToUtcDay(endDate);
     return this.policyModel
       .find({
         office: officeId,
@@ -154,10 +150,8 @@ export class PoliciesService {
         expirationDate: restDto.expirationDate || policy.expirationDate,
       };
 
-      const effectiveDate = new Date(newPolicyData.effectiveDate);
-      effectiveDate.setHours(0, 0, 0, 0);
-      const expirationDate = new Date(newPolicyData.expirationDate);
-      expirationDate.setHours(0, 0, 0, 0);
+      const effectiveDate = this.datetimeService.dateToUtcDay(newPolicyData.effectiveDate);
+      const expirationDate = this.datetimeService.dateToUtcDay(newPolicyData.expirationDate);
       if (effectiveDate.getTime() >= expirationDate.getTime()) {
         throw new BadRequestException(
           `Expiration date must be greater than effective date`,
@@ -167,17 +161,16 @@ export class PoliciesService {
       restDto.expirationDate = expirationDate;
 
       if (restDto.cancellationDate) {
-        const cancellation = new Date(restDto.cancellationDate);
-        cancellation.setHours(0, 0, 0, 0);
+        const cancellationDate = this.datetimeService.dateToUtcDay(restDto.cancellationDate);
         if (
-          cancellation.getTime() < effectiveDate.getTime() ||
-          cancellation.getTime() > expirationDate.getTime()
+          cancellationDate.getTime() < effectiveDate.getTime() ||
+          cancellationDate.getTime() > expirationDate.getTime()
         ) {
           throw new BadRequestException(
             `Cancellation date must be between effective date and expiration date`,
           );
         }
-        restDto.cancellationDate = cancellation;
+        restDto.cancellationDate = cancellationDate;
       }
     }
 
