@@ -288,11 +288,11 @@ export class QqcatalystService {
               queryKey: [
                 'persons',
                 {
-                  office: personDto.office.toString(),
-                  year: personDto.since
+                  office: existingPerson[0].office.toString(),
+                  year: existingPerson[0].since
                     .toLocaleDateString('en-CA')
                     .substring(0, 4),
-                  month: personDto.since
+                  month: existingPerson[0].since
                     .toLocaleDateString('en-CA')
                     .substring(5, 7),
                 },
@@ -532,10 +532,27 @@ export class QqcatalystService {
           if (policy) {
             // Si la póliza ya existe con la misma fecha de vigencia, actualizarla
             if (!policyDto.isDeleted) {
-              await this.policiesService.update(policy._id.toString(), {
+              const updatedPolicy = await this.policiesService.update(policy._id.toString(), {
                 ...policyDto,
                 person: personId,
               });
+              const payload = {
+                policy: updatedPolicy,
+                queryKey: [
+                  'policies',
+                  {
+                    office: existingPerson[0].office.toString(),
+                    year: updatedPolicy.expirationDate
+                      .toLocaleDateString('en-CA')
+                      .substring(0, 4),
+                    month: updatedPolicy.expirationDate
+                      .toLocaleDateString('en-CA')
+                      .substring(5, 7),
+                  },
+                ],
+                action: 'update',
+              };
+              this.webSocketGateway.emitChangePolicy(payload);
             } else {
               //Si la poliza eliminada tiene PriorPolicyId y se verifica que esta poliza es un Renewal,
               //Se marca como no renovada la poliza anterior.
