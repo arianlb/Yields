@@ -13,8 +13,8 @@ import { PersonsService } from './persons.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import { SearchCriteriaDto } from './dto/search-criteria.dto';
-import { DateSearchDto } from '../common/dto/date-search.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
+import { ParseUtcDatePipe } from '../common/pipes/parse-utc-date.pipe';
 import { Auth } from '../auth/decorators/auth.decorator';
 
 @ApiTags('Persons')
@@ -32,9 +32,10 @@ export class PersonsController {
   @Get('office/:officeId')
   findAll(
     @Param('officeId', ParseMongoIdPipe) officeId: string,
-    @Query() dateSearchDto: DateSearchDto,
+    @Query('startDate', ParseUtcDatePipe) startDate: string,
+    @Query('endDate', ParseUtcDatePipe) endDate: string,
   ) {
-    return this.personsService.findAll(officeId, dateSearchDto);
+    return this.personsService.findAll(officeId, startDate, endDate);
   }
 
   @Get()

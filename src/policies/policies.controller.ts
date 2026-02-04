@@ -13,7 +13,7 @@ import { PoliciesService } from './policies.service';
 import { CreatePolicyDto } from './dto/create-policy.dto';
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
-import { DateSearchDto } from '../common/dto/date-search.dto';
+import { ParseUtcDatePipe } from '../common/pipes/parse-utc-date.pipe';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { AssignPoliciesDto } from './dto/assign-policies.dto';
 import { PolicySearchCriteriaDto } from './dto/policy-search-criteria.dto';
@@ -33,17 +33,27 @@ export class PoliciesController {
   @Get('expiration-date/:officeId')
   findByExpirationDate(
     @Param('officeId', ParseMongoIdPipe) officeId: string,
-    @Query() dateSearchDto: DateSearchDto,
+    @Query('startDate', ParseUtcDatePipe) startDate: string,
+    @Query('endDate', ParseUtcDatePipe) endDate: string,
   ) {
-    return this.policiesService.findByExpirationDate(officeId, dateSearchDto);
+    return this.policiesService.findByExpirationDate(
+      officeId,
+      startDate,
+      endDate,
+    );
   }
 
   @Get('cancellation-date/:officeId')
   findByCancellationDate(
     @Param('officeId', ParseMongoIdPipe) officeId: string,
-    @Query() dateSearchDto: DateSearchDto,
+    @Query('startDate', ParseUtcDatePipe) startDate: string,
+    @Query('endDate', ParseUtcDatePipe) endDate: string,
   ) {
-    return this.policiesService.findByCancellationDate(officeId, dateSearchDto);
+    return this.policiesService.findByCancellationDate(
+      officeId,
+      startDate,
+      endDate,
+    );
   }
 
   @Get(':id')

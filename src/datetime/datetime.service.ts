@@ -34,7 +34,7 @@ export class DatetimeService {
 
     return new Date(Date.UTC(y, m, d, 0, 0, 0));
   }
-  
+
   startDateToUtcDayRange(date: Date) {
     const y = date.getUTCFullYear();
     const m = date.getUTCMonth();

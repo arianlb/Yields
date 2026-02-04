@@ -8,7 +8,6 @@ import {
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import { SearchCriteriaDto } from './dto/search-criteria.dto';
-import { DateSearchDto } from '../common/dto/date-search.dto';
 import { Person } from './schemas/person.schema';
 import { OfficesService } from '../offices/offices.service';
 import { UsersService } from '../users/users.service';
@@ -67,10 +66,7 @@ export class PersonsService {
     );
   }
 
-  async findAll(
-    officeId: string,
-    { startDate, endDate }: DateSearchDto,
-  ): Promise<Person[]> {
+  async findAll(officeId: string, startDate, endDate): Promise<Person[]> {
     const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
     const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
     return this.personModel

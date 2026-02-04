@@ -11,7 +11,6 @@ import { Policy } from './schemas/policy.schema';
 import { UsersService } from '../users/users.service';
 import { PersonsService } from '../persons/persons.service';
 import { DatetimeService } from '../datetime/datetime.service';
-import { DateSearchDto } from '../common/dto/date-search.dto';
 import { AssignPoliciesDto } from './dto/assign-policies.dto';
 import { PolicySearchCriteriaDto } from './dto/policy-search-criteria.dto';
 
@@ -43,8 +42,12 @@ export class PoliciesService {
       );
     }
 
-    const effectiveDate = this.datetimeService.dateToUtcDay(createPolicyDto.effectiveDate);
-    const expirationDate = this.datetimeService.dateToUtcDay(createPolicyDto.expirationDate);
+    const effectiveDate = this.datetimeService.dateToUtcDay(
+      createPolicyDto.effectiveDate,
+    );
+    const expirationDate = this.datetimeService.dateToUtcDay(
+      createPolicyDto.expirationDate,
+    );
     if (effectiveDate.getTime() >= expirationDate.getTime()) {
       throw new BadRequestException(
         `Expiration date must be greater than effective date`,
@@ -54,7 +57,9 @@ export class PoliciesService {
     createPolicyDto.expirationDate = expirationDate;
 
     if (createPolicyDto.cancellationDate) {
-      const cancellationDate = this.datetimeService.dateToUtcDay(createPolicyDto.cancellationDate);
+      const cancellationDate = this.datetimeService.dateToUtcDay(
+        createPolicyDto.cancellationDate,
+      );
       createPolicyDto.cancellationDate = cancellationDate;
       if (
         cancellationDate.getTime() < effectiveDate.getTime() ||
@@ -66,10 +71,14 @@ export class PoliciesService {
       }
     }
 
-    return (await (await this.policyModel.create({
-      ...createPolicyDto,
-      office: person.office,
-    })).populate('person', 'name phone')).populate('assignedAgent', 'name');
+    return (
+      await (
+        await this.policyModel.create({
+          ...createPolicyDto,
+          office: person.office,
+        })
+      ).populate('person', 'name phone')
+    ).populate('assignedAgent', 'name');
   }
 
   async findByQuery(policySearchCriteriaDto: PolicySearchCriteriaDto) {
@@ -84,14 +93,13 @@ export class PoliciesService {
 
   async findByExpirationDate(
     officeId: string,
-    { startDate, endDate }: DateSearchDto,
+    startDate,
+    endDate,
   ): Promise<Policy[]> {
-    const startDateUtc = this.datetimeService.dateToUtcDay(startDate);
-    const endDateUtc = this.datetimeService.dateToUtcDay(endDate);
     return this.policyModel
       .find({
         office: officeId,
-        expirationDate: { $gte: startDateUtc, $lte: endDateUtc },
+        expirationDate: { $gte: startDate, $lte: endDate },
         status: { $ne: 'C' },
       })
       .select(
@@ -106,14 +114,13 @@ export class PoliciesService {
 
   async findByCancellationDate(
     officeId: string,
-    { startDate, endDate }: DateSearchDto,
+    startDate,
+    endDate,
   ): Promise<Policy[]> {
-    const startDateUtc = this.datetimeService.dateToUtcDay(startDate);
-    const endDateUtc = this.datetimeService.dateToUtcDay(endDate);
     return this.policyModel
       .find({
         office: officeId,
-        cancellationDate: { $gte: startDateUtc, $lte: endDateUtc },
+        cancellationDate: { $gte: startDate, $lte: endDate },
         status: 'C',
       })
       .select('policyNumber carrier line premium cancellationDate notes person')
@@ -150,8 +157,12 @@ export class PoliciesService {
         expirationDate: restDto.expirationDate || policy.expirationDate,
       };
 
-      const effectiveDate = this.datetimeService.dateToUtcDay(newPolicyData.effectiveDate);
-      const expirationDate = this.datetimeService.dateToUtcDay(newPolicyData.expirationDate);
+      const effectiveDate = this.datetimeService.dateToUtcDay(
+        newPolicyData.effectiveDate,
+      );
+      const expirationDate = this.datetimeService.dateToUtcDay(
+        newPolicyData.expirationDate,
+      );
       if (effectiveDate.getTime() >= expirationDate.getTime()) {
         throw new BadRequestException(
           `Expiration date must be greater than effective date`,
@@ -161,7 +172,9 @@ export class PoliciesService {
       restDto.expirationDate = expirationDate;
 
       if (restDto.cancellationDate) {
-        const cancellationDate = this.datetimeService.dateToUtcDay(restDto.cancellationDate);
+        const cancellationDate = this.datetimeService.dateToUtcDay(
+          restDto.cancellationDate,
+        );
         if (
           cancellationDate.getTime() < effectiveDate.getTime() ||
           cancellationDate.getTime() > expirationDate.getTime()
