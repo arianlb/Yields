@@ -13,6 +13,7 @@ import { PersonsService } from '../persons/persons.service';
 import { DatetimeService } from '../datetime/datetime.service';
 import { AssignPoliciesDto } from './dto/assign-policies.dto';
 import { PolicySearchCriteriaDto } from './dto/policy-search-criteria.dto';
+import { DashboardData } from './interfaces/data-dashboard.interface';
 
 @Injectable()
 export class PoliciesService {
@@ -128,6 +129,30 @@ export class PoliciesService {
       .sort({ cancellationDate: 1 })
       .lean()
       .exec();
+  }
+
+  async findDashboardData(
+    officeId: string,
+    startDate,
+    endDate,
+  ) {
+    const response: DashboardData = {
+      stats: [],
+      topAgents: [],
+      topSources: []
+    }
+    const previousMonthStart = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth() - 1, 1, 0, 0, 0));
+    const previousMonthEnd = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 0, 0, 0, 0));
+    const [currentMonthContacts, previousMonthContacts] = await Promise.all([
+      this.personsService.getCountByOffice(officeId, startDate, endDate),
+      this.personsService.getCountByOffice(officeId, previousMonthStart, previousMonthEnd)
+    ]);
+    response.stats.push({
+      name: 'Contacts',
+      amount: currentMonthContacts,
+      percentage: previousMonthContacts > 0 ? Math.round((currentMonthContacts / previousMonthContacts) * 100) : 100
+    });
+    return response;
   }
 
   async findOne(id: string): Promise<Policy> {

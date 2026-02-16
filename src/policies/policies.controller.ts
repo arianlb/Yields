@@ -55,6 +55,19 @@ export class PoliciesController {
       endDate,
     );
   }
+  
+  @Get('dashboard/:officeId')
+  findDashboardData(
+    @Param('officeId', ParseMongoIdPipe) officeId: string,
+    @Query('startDate', ParseUtcDatePipe) startDate: string,
+    @Query('endDate', ParseUtcDatePipe) endDate: string,
+  ) {
+    return this.policiesService.findDashboardData(
+      officeId,
+      startDate,
+      endDate,
+    );
+  }
 
   @Get(':id')
   findOne(@Param('id', ParseMongoIdPipe) id: string) {

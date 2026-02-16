@@ -80,6 +80,16 @@ export class PersonsService {
       .exec();
   }
 
+  async getCountByOffice(officeId: string, startDate, endDate): Promise<number> {
+    const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
+    const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
+    return this.personModel
+      .countDocuments({
+        office: officeId,
+        since: { $gte: startDateUtc, $lte: endDateUtc },
+      }).exec();
+    }
+
   async findByQuery(searchCriteriaDto: SearchCriteriaDto) {
     if (searchCriteriaDto.name) {
       searchCriteriaDto.name = this.capitalizeFirstLetter(

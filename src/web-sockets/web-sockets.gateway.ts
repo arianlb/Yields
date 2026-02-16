@@ -21,6 +21,11 @@ export class WebSocketsGateway {
   handleChangePolicy(client: Socket, payload: any) {
     client.broadcast.emit('change-policy', payload);
   }
+  
+  @SubscribeMessage('change-source')
+  handleChangeSource(client: Socket, payload: any) {
+    client.broadcast.emit('change-source', payload);
+  }
 
   emitChangePerson(payload: any) {
     this.wss.emit('change-person', payload);
