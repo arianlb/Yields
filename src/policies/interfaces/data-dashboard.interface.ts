@@ -2,16 +2,14 @@ export interface DashboardData {
     stats: {
         name: string;
         amount: number;
-        percentage: number;
+        percentage: string;
     }[];
     topAgents: {
         name: string;
         sales: number;
-        percentage: number;
     }[];
     topSources: {
         name: string;
         sales: number;
-        percentage: number;
     }[];
 }

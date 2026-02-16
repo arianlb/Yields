@@ -131,27 +131,115 @@ export class PoliciesService {
       .exec();
   }
 
-  async findDashboardData(
-    officeId: string,
-    startDate,
-    endDate,
-  ) {
+  async findDashboardData(officeId: string, startDate, endDate) {
     const response: DashboardData = {
       stats: [],
       topAgents: [],
-      topSources: []
-    }
-    const previousMonthStart = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth() - 1, 1, 0, 0, 0));
-    const previousMonthEnd = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 0, 0, 0, 0));
-    const [currentMonthContacts, previousMonthContacts] = await Promise.all([
-      this.personsService.getCountByOffice(officeId, startDate, endDate),
-      this.personsService.getCountByOffice(officeId, previousMonthStart, previousMonthEnd)
+      topSources: [],
+    };
+    const previousMonthStart = new Date(
+      Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth() - 1,
+        1,
+        0,
+        0,
+        0,
+      ),
+    );
+    const previousMonthEnd = new Date(
+      Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 0, 0, 0, 0),
+    );
+    
+    const [
+      currentMonthContacts,
+      previousMonthContacts,
+      currentMonthCustomers,
+      previousMonthCustomers,
+      currentMonthRenewals,
+      previousMonthRenewals,
+      currentMonthCancellations,
+      previousMonthCancellations,
+      topAgentsAndSources,
+    ] = await Promise.all([
+      this.personsService.getCountByOffice(
+        { office: officeId },
+        startDate,
+        endDate,
+      ),
+      this.personsService.getCountByOffice(
+        { office: officeId },
+        previousMonthStart,
+        previousMonthEnd,
+      ),
+      this.personsService.getCountByOffice(
+        { office: officeId, isCustomer: true },
+        startDate,
+        endDate,
+      ),
+      this.personsService.getCountByOffice(
+        { office: officeId, isCustomer: true },
+        previousMonthStart,
+        previousMonthEnd,
+      ),
+      this.policyModel.countDocuments({
+        office: officeId,
+        renewed: true,
+        expirationDate: { $gte: startDate, $lte: endDate },
+      }).exec(),
+      this.policyModel.countDocuments({
+        office: officeId,
+        renewed: true,
+        expirationDate: { $gte: previousMonthStart, $lte: previousMonthEnd },
+      }).exec(),
+      this.policyModel.countDocuments({
+        office: officeId,
+        cancellationDate: { $gte: startDate, $lte: endDate },
+        status: 'C',
+      }).exec(),
+      this.policyModel.countDocuments({
+        office: officeId,
+        cancellationDate: { $gte: previousMonthStart, $lte: previousMonthEnd },
+        status: 'C',
+      }).exec(),
+      this.personsService.getTheTopAgentsAndSources(officeId, startDate, endDate)
     ]);
+    
     response.stats.push({
       name: 'Contacts',
       amount: currentMonthContacts,
-      percentage: previousMonthContacts > 0 ? Math.round((currentMonthContacts / previousMonthContacts) * 100) : 100
+      percentage:
+        previousMonthContacts > 0
+          ? ((currentMonthContacts / previousMonthContacts) * 100).toFixed(1)
+          : '100',
     });
+    response.stats.push({
+      name: 'Customers',
+      amount: currentMonthCustomers,
+      percentage:
+        previousMonthCustomers > 0
+          ? ((currentMonthCustomers / previousMonthCustomers) * 100).toFixed(1)
+          : '100',
+    });
+    response.stats.push({
+      name: 'Renewals',
+      amount: currentMonthRenewals,
+      percentage:
+        previousMonthRenewals > 0
+          ? ((currentMonthRenewals / previousMonthRenewals) * 100).toFixed(1)
+          : '100',
+    });
+    response.stats.push({
+      name: 'Cancellations',
+      amount: currentMonthCancellations,
+      percentage:
+        previousMonthCancellations > 0
+          ? (
+              (currentMonthCancellations / previousMonthCancellations) * 100
+            ).toFixed(1)
+          : '100',
+    });
+
+    response.topAgents = topAgentsAndSources.topAgents;
+    response.topSources = topAgentsAndSources.topSources;
     return response;
   }
 

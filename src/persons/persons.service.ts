@@ -80,15 +80,46 @@ export class PersonsService {
       .exec();
   }
 
-  async getCountByOffice(officeId: string, startDate, endDate): Promise<number> {
+  async getCountByOffice(criteria, startDate: Date, endDate: Date): Promise<number> {
     const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
     const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
     return this.personModel
       .countDocuments({
-        office: officeId,
+        ...criteria,
         since: { $gte: startDateUtc, $lte: endDateUtc },
       }).exec();
-    }
+  }
+
+  async getTheTopAgentsAndSources(officeId: string, startDate: Date, endDate: Date) {
+    const startDateUtc = this.datetimeService.startDateToUtcDayRange(startDate);
+    const endDateUtc = this.datetimeService.endDateToUtcDayRange(endDate);
+    const contacts = await this.personModel.find({
+      office: officeId,
+      isCustomer: true,
+      since: { $gte: startDateUtc, $lte: endDateUtc },
+    }).select('agent source').populate('agent', 'name').lean().exec();
+
+    const agentSalesMap = new Map<string, number>();
+    const sourceSalesMap = new Map<string, number>();
+    contacts.forEach((contact) => {
+      if (contact.agent) {
+        agentSalesMap.set(contact.agent.name, (agentSalesMap.get(contact.agent.name) || 0) + 1);
+      }
+      if (contact.source) {
+        sourceSalesMap.set(contact.source, (sourceSalesMap.get(contact.source) || 0) + 1);
+      }
+    });
+    const topAgents = Array.from(agentSalesMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, sales]) => ({ name, sales }));
+    const topSources = Array.from(sourceSalesMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, sales]) => ({ name, sales }));
+
+    return { topAgents, topSources };
+  }
 
   async findByQuery(searchCriteriaDto: SearchCriteriaDto) {
     if (searchCriteriaDto.name) {
