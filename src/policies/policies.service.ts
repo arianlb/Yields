@@ -202,40 +202,38 @@ export class PoliciesService {
       }).exec(),
       this.personsService.getTheTopAgentsAndSources(officeId, startDate, endDate)
     ]);
-    
+
     response.stats.push({
       name: 'Contacts',
       amount: currentMonthContacts,
       percentage:
         previousMonthContacts > 0
-          ? ((currentMonthContacts / previousMonthContacts) * 100).toFixed(1)
-          : '100',
+          ? Math.round((((currentMonthContacts / previousMonthContacts) * 100) - 100) * 10) / 10
+          : 100,
     });
     response.stats.push({
       name: 'Customers',
       amount: currentMonthCustomers,
       percentage:
         previousMonthCustomers > 0
-          ? ((currentMonthCustomers / previousMonthCustomers) * 100).toFixed(1)
-          : '100',
+          ? Math.round((((currentMonthCustomers / previousMonthCustomers) * 100) - 100) * 10) / 10
+          : 100,
     });
     response.stats.push({
       name: 'Renewals',
       amount: currentMonthRenewals,
       percentage:
         previousMonthRenewals > 0
-          ? ((currentMonthRenewals / previousMonthRenewals) * 100).toFixed(1)
-          : '100',
+          ? Math.round((((currentMonthRenewals / previousMonthRenewals) * 100) - 100) * 10) / 10
+          : 100,
     });
     response.stats.push({
       name: 'Cancellations',
       amount: currentMonthCancellations,
       percentage:
         previousMonthCancellations > 0
-          ? (
-              (currentMonthCancellations / previousMonthCancellations) * 100
-            ).toFixed(1)
-          : '100',
+          ? Math.round((((currentMonthCancellations / previousMonthCancellations) * 100) - 100) * 10) / 10
+          : 100,
     });
 
     response.topAgents = topAgentsAndSources.topAgents;
