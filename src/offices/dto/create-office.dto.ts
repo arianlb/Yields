@@ -35,8 +35,9 @@ export class CreateOfficeDto {
 
   @ApiProperty()
   @IsArray()
+  @IsOptional()
   @IsString({ each: true })
-  readonly sources: string[];
+  readonly sources?: string[];
 
   @ApiProperty({ type: [SourceObjectDto] })
   @IsArray()

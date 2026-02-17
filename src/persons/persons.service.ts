@@ -51,7 +51,7 @@ export class PersonsService {
     }
     if (
       createPersonDto.source &&
-      !refOffice.sources.includes(createPersonDto.source)
+      !refOffice.sourceObjects.some((source) => source.name === createPersonDto.source)
     ) {
       throw new NotFoundException(
         `Office with id ${createPersonDto.office} does not have source ${createPersonDto.source}`,

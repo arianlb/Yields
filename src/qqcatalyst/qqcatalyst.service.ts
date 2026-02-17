@@ -235,7 +235,7 @@ export class QqcatalystService {
     const office = this.offices.find(
       (office) => office.qqOfficeId === locationId,
     );
-    if (office && office.sources.includes(CustomerSource)) {
+    if (office && office.sourceObjects.some((source) => source.name === CustomerSource)) {
       return CustomerSource;
     }
     switch (CustomerSource) {
