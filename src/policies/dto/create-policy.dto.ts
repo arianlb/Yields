@@ -74,6 +74,11 @@ export class CreatePolicyDto {
   @IsOptional()
   @IsInt()
   readonly qqPolicyId?: number;
+  
+  @ApiProperty()
+  @IsOptional()
+  @IsInt()
+  readonly qqPriorPolicyId?: number;
 
   @ApiProperty()
   @Matches(/^(A|C|D|E)$/, {

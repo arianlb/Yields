@@ -53,6 +53,9 @@ export class Policy {
 
   @Prop()
   qqPolicyId: number;
+  
+  @Prop()
+  qqPriorPolicyId: number;
 }
 
 export type PolicyDocument = HydratedDocument<Policy>;
