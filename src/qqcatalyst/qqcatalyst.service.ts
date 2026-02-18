@@ -757,17 +757,17 @@ export class QqcatalystService {
       this.logger.log('Executing every 5 minutes QQCatalyst task');
       const startDate = this.todayInTimeZone('America/New_York', 0);
       const endDate = this.todayInTimeZone('Etc/UTC', 1);
-      // try {
-      //   const result = await this.contactsProcessing({ startDate, endDate });
-      //   this.logger.log(result);
-      //   const policiesResult = await this.policiesProcessing({
-      //     startDate,
-      //     endDate,
-      //   });
-      //   this.logger.log(policiesResult);
-      // } catch (error) {
-      //   this.logger.error('Error in five-minute QQCatalyst task:', error);
-      // }
+      try {
+        const result = await this.contactsProcessing({ startDate, endDate });
+        this.logger.log(result);
+        const policiesResult = await this.policiesProcessing({
+          startDate,
+          endDate,
+        });
+        this.logger.log(policiesResult);
+      } catch (error) {
+        this.logger.error('Error in five-minute QQCatalyst task:', error);
+      }
       this.taskRunning = false;
     }
   }

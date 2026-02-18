@@ -124,8 +124,9 @@ export class PoliciesService {
         cancellationDate: { $gte: startDate, $lte: endDate },
         status: 'C',
       })
-      .select('policyNumber carrier line premium cancellationDate notes person')
+      .select('policyNumber carrier line premium effectiveDate cancellationDate notes person salesAgent')
       .populate('person', 'name phone')
+      .populate('salesAgent', 'name')
       .sort({ cancellationDate: 1 })
       .lean()
       .exec();
