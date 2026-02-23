@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Query } from '@nestjs/common';
 import { QqcatalystService } from './qqcatalyst.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { QqDateSearchDto } from './dto/qq-date-search.dto';
@@ -9,7 +9,12 @@ import { Auth } from '../auth/decorators/auth.decorator';
 @ApiBearerAuth()
 @Controller('qqcatalyst')
 export class QqcatalystController {
-  constructor(private readonly qqcatalystService: QqcatalystService) {}
+  constructor(
+    @Inject('SEBANDA_89')
+    private readonly qqcatalystService: QqcatalystService,
+    @Inject('SEBANDA_117')
+    private readonly qqcatalystServiceB: QqcatalystService,
+  ) {}
 
   @Auth()
   @Get('/contacts')
@@ -26,5 +31,22 @@ export class QqcatalystController {
   @Post('/policies/manual')
   insertPolicyManually(@Body() policyNumbersDto: PolicyNumbersDto) {
     return this.qqcatalystService.insertPolicyManually(policyNumbersDto);
+  }
+  
+  @Auth()
+  @Get('/contacts-b')
+  processContactsB(@Query() qqDateSearchDto: QqDateSearchDto) {
+    return this.qqcatalystServiceB.contactsProcessing(qqDateSearchDto);
+  }
+
+  @Auth()
+  @Get('/policies-b')
+  processPoliciesB(@Query() qqDateSearchDto: QqDateSearchDto) {
+    return this.qqcatalystServiceB.policiesProcessing(qqDateSearchDto);
+  }
+
+  @Post('/policies/manual-b')
+  insertPolicyManuallyB(@Body() policyNumbersDto: PolicyNumbersDto) {
+    return this.qqcatalystServiceB.insertPolicyManually(policyNumbersDto);
   }
 }

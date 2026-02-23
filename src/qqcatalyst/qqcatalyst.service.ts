@@ -16,11 +16,11 @@ import { WebSocketsGateway } from '../web-sockets/web-sockets.gateway';
 
 @Injectable()
 export class QqcatalystService {
-  private readonly logger = new Logger('QQcatalystService');
-  private readonly clientId = process.env.QQCATALYST_CLIENT_ID;
-  private readonly clientSecret = process.env.QQCATALYST_CLIENT_SECRET;
-  private readonly catalystUser = process.env.QQCATALYST_USER;
-  private readonly catalystPassword = process.env.QQCATALYST_PASSWORD;
+  private readonly logger: Logger;
+  // private readonly clientId = process.env.QQCATALYST_CLIENT_ID;
+  // private readonly clientSecret = process.env.QQCATALYST_CLIENT_SECRET;
+  // private readonly catalystUser = process.env.QQCATALYST_USER;
+  // private readonly catalystPassword = process.env.QQCATALYST_PASSWORD;
   private readonly tokenURL = 'https://login.qqcatalyst.com/oauth/token';
   private readonly apiURL = 'https://api.qqcatalyst.com/v1/';
   private accessToken: string | null = null;
@@ -37,7 +37,14 @@ export class QqcatalystService {
     private readonly personsService: PersonsService,
     private readonly policiesService: PoliciesService,
     private readonly webSocketGateway: WebSocketsGateway,
-  ) {}
+    private readonly clientId: string,
+    private readonly clientSecret: string,
+    private readonly catalystUser: string,
+    private readonly catalystPassword: string,
+    private readonly contextName: string,
+  ) {
+    this.logger = new Logger('QqcatalystService-' + this.contextName);
+  }
 
   private async getAccessToken() {
     const params = new URLSearchParams();
