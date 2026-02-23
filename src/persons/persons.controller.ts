@@ -16,6 +16,7 @@ import { SearchCriteriaDto } from './dto/search-criteria.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id/parse-mongo-id.pipe';
 import { ParseUtcDatePipe } from '../common/pipes/parse-utc-date.pipe';
 import { Auth } from '../auth/decorators/auth.decorator';
+import { ValidRoles } from '../auth/interfaces/valid-roles';
 
 @ApiTags('Persons')
 @ApiBearerAuth()
@@ -24,6 +25,7 @@ import { Auth } from '../auth/decorators/auth.decorator';
 export class PersonsController {
   constructor(private readonly personsService: PersonsService) {}
 
+  @Auth(ValidRoles.admin, ValidRoles.agent)
   @Post()
   create(@Body() createPersonDto: CreatePersonDto) {
     return this.personsService.create(createPersonDto);
@@ -48,6 +50,7 @@ export class PersonsController {
     return this.personsService.findOne(id);
   }
 
+  @Auth(ValidRoles.admin, ValidRoles.agent)
   @Patch(':id')
   update(
     @Param('id', ParseMongoIdPipe) id: string,
@@ -56,6 +59,7 @@ export class PersonsController {
     return this.personsService.update(id, updatePersonDto);
   }
 
+  @Auth(ValidRoles.admin, ValidRoles.manager)
   @Delete(':id')
   remove(@Param('id', ParseMongoIdPipe) id: string) {
     return this.personsService.remove(id);

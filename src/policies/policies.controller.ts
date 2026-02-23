@@ -17,6 +17,7 @@ import { ParseUtcDatePipe } from '../common/pipes/parse-utc-date.pipe';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { AssignPoliciesDto } from './dto/assign-policies.dto';
 import { PolicySearchCriteriaDto } from './dto/policy-search-criteria.dto';
+import { ValidRoles } from '../auth/interfaces/valid-roles';
 
 @ApiTags('Policies')
 @ApiBearerAuth()
@@ -25,6 +26,7 @@ import { PolicySearchCriteriaDto } from './dto/policy-search-criteria.dto';
 export class PoliciesController {
   constructor(private readonly policiesService: PoliciesService) {}
 
+  @Auth(ValidRoles.admin, ValidRoles.agent)
   @Post()
   create(@Body() createPolicyDto: CreatePolicyDto) {
     return this.policiesService.create(createPolicyDto);
@@ -79,6 +81,7 @@ export class PoliciesController {
     return this.policiesService.findByQuery(policySearchCriteriaDto);
   }
 
+  @Auth(ValidRoles.admin, ValidRoles.agent)
   @Patch(':id')
   update(
     @Param('id', ParseMongoIdPipe) id: string,
@@ -87,11 +90,13 @@ export class PoliciesController {
     return this.policiesService.update(id, updatePolicyDto);
   }
 
+  @Auth(ValidRoles.admin, ValidRoles.manager)
   @Post('assign-policies')
   assignPoliciesToAgent(@Body() assignPoliciesDto: AssignPoliciesDto) {
     return this.policiesService.assignPoliciesToAgent(assignPoliciesDto);
   }
 
+  @Auth(ValidRoles.admin, ValidRoles.manager)
   @Delete(':id')
   remove(@Param('id', ParseMongoIdPipe) id: string) {
     return this.policiesService.remove(id);
