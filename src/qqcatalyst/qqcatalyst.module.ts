@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { AuthModule } from '../auth/auth.module';
 import { QqcatalystService } from './qqcatalyst.service';
+import { QqcatalystScheduleService } from './qqcatalyst-schedule.service';
 import { QqcatalystController } from './qqcatalyst.controller';
 import { OfficesModule } from '../offices/offices.module';
 import { UsersModule } from '../users/users.module';
@@ -26,6 +27,7 @@ import { WebSocketsGateway } from '../web-sockets/web-sockets.gateway';
     WebSocketsModule,
   ],
   providers: [
+    QqcatalystScheduleService,
     {
       provide: 'SEBANDA_89',
       useFactory: (

@@ -4,7 +4,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { Cron } from '@nestjs/schedule';
 import { QqDateSearchDto } from './dto/qq-date-search.dto';
 import { PolicyNumbersDto } from './dto/policy-numbers.dto';
 import { ContactResponse, PolicyResponse } from './interfaces';
@@ -744,20 +743,12 @@ export class QqcatalystService {
     return today.toLocaleDateString('en-CA', { timeZone: tz });
   }
 
-  @Cron('0 58 7 * * 1-6', {
-    name: 'preWorkQQCatalystTask',
-    timeZone: 'America/New_York',
-  })
   async handlePreWorkTask() {
     this.logger.log('Executing pre-work QQCatalyst task');
     this.offices = await this.getOffices();
     this.users = await this.getUsersByOffice(this.offices);
   }
 
-  @Cron('0 */5 8-18 * * 1-6', {
-    name: 'fiveMinutesQQCatalystTask',
-    timeZone: 'America/New_York',
-  })
   async handleFiveMinuteTask() {
     if (!this.taskRunning) {
       this.taskRunning = true;
@@ -779,10 +770,6 @@ export class QqcatalystService {
     }
   }
 
-  @Cron('0 59 23 * * *', {
-    name: 'midnightQQCatalystTask',
-    timeZone: 'America/New_York',
-  })
   async handleDailyTask() {
     this.logger.log('Executing midnight daily QQCatalyst task');
     const startDate = this.todayInTimeZone('America/New_York', 0);
