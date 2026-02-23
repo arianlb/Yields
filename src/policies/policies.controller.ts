@@ -81,6 +81,11 @@ export class PoliciesController {
     return this.policiesService.findByQuery(policySearchCriteriaDto);
   }
 
+  @Get('person/:personId')
+  findByPerson(@Param('personId', ParseMongoIdPipe) personId: string) {
+    return this.policiesService.findByPersonId(personId);
+  }
+
   @Auth(ValidRoles.admin, ValidRoles.agent)
   @Patch(':id')
   update(

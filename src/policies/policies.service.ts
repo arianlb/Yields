@@ -124,7 +124,9 @@ export class PoliciesService {
         cancellationDate: { $gte: startDate, $lte: endDate },
         status: 'C',
       })
-      .select('policyNumber carrier line premium effectiveDate cancellationDate notes person salesAgent')
+      .select(
+        'policyNumber carrier line premium effectiveDate cancellationDate notes person salesAgent',
+      )
       .populate('person', 'name phone')
       .populate('salesAgent', 'name')
       .sort({ cancellationDate: 1 })
@@ -139,7 +141,9 @@ export class PoliciesService {
       topSources: [],
     };
     const previousMonthStart = new Date(
-      Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth() - 1,
+      Date.UTC(
+        startDate.getUTCFullYear(),
+        startDate.getUTCMonth() - 1,
         1,
         0,
         0,
@@ -149,7 +153,7 @@ export class PoliciesService {
     const previousMonthEnd = new Date(
       Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 0, 0, 0, 0),
     );
-    
+
     const [
       currentMonthContacts,
       previousMonthContacts,
@@ -181,27 +185,42 @@ export class PoliciesService {
         previousMonthStart,
         previousMonthEnd,
       ),
-      this.policyModel.countDocuments({
-        office: officeId,
-        renewed: true,
-        expirationDate: { $gte: startDate, $lte: endDate },
-      }).exec(),
-      this.policyModel.countDocuments({
-        office: officeId,
-        renewed: true,
-        expirationDate: { $gte: previousMonthStart, $lte: previousMonthEnd },
-      }).exec(),
-      this.policyModel.countDocuments({
-        office: officeId,
-        cancellationDate: { $gte: startDate, $lte: endDate },
-        status: 'C',
-      }).exec(),
-      this.policyModel.countDocuments({
-        office: officeId,
-        cancellationDate: { $gte: previousMonthStart, $lte: previousMonthEnd },
-        status: 'C',
-      }).exec(),
-      this.personsService.getTheTopAgentsAndSources(officeId, startDate, endDate)
+      this.policyModel
+        .countDocuments({
+          office: officeId,
+          renewed: true,
+          expirationDate: { $gte: startDate, $lte: endDate },
+        })
+        .exec(),
+      this.policyModel
+        .countDocuments({
+          office: officeId,
+          renewed: true,
+          expirationDate: { $gte: previousMonthStart, $lte: previousMonthEnd },
+        })
+        .exec(),
+      this.policyModel
+        .countDocuments({
+          office: officeId,
+          cancellationDate: { $gte: startDate, $lte: endDate },
+          status: 'C',
+        })
+        .exec(),
+      this.policyModel
+        .countDocuments({
+          office: officeId,
+          cancellationDate: {
+            $gte: previousMonthStart,
+            $lte: previousMonthEnd,
+          },
+          status: 'C',
+        })
+        .exec(),
+      this.personsService.getTheTopAgentsAndSources(
+        officeId,
+        startDate,
+        endDate,
+      ),
     ]);
 
     response.stats.push({
@@ -209,7 +228,9 @@ export class PoliciesService {
       amount: currentMonthContacts,
       percentage:
         previousMonthContacts > 0
-          ? Math.round((((currentMonthContacts / previousMonthContacts) * 100) - 100) * 10) / 10
+          ? Math.round(
+              ((currentMonthContacts / previousMonthContacts) * 100 - 100) * 10,
+            ) / 10
           : 100,
     });
     response.stats.push({
@@ -217,7 +238,10 @@ export class PoliciesService {
       amount: currentMonthCustomers,
       percentage:
         previousMonthCustomers > 0
-          ? Math.round((((currentMonthCustomers / previousMonthCustomers) * 100) - 100) * 10) / 10
+          ? Math.round(
+              ((currentMonthCustomers / previousMonthCustomers) * 100 - 100) *
+                10,
+            ) / 10
           : 100,
     });
     response.stats.push({
@@ -225,7 +249,9 @@ export class PoliciesService {
       amount: currentMonthRenewals,
       percentage:
         previousMonthRenewals > 0
-          ? Math.round((((currentMonthRenewals / previousMonthRenewals) * 100) - 100) * 10) / 10
+          ? Math.round(
+              ((currentMonthRenewals / previousMonthRenewals) * 100 - 100) * 10,
+            ) / 10
           : 100,
     });
     response.stats.push({
@@ -233,7 +259,11 @@ export class PoliciesService {
       amount: currentMonthCancellations,
       percentage:
         previousMonthCancellations > 0
-          ? Math.round((((currentMonthCancellations / previousMonthCancellations) * 100) - 100) * 10) / 10
+          ? Math.round(
+              ((currentMonthCancellations / previousMonthCancellations) * 100 -
+                100) *
+                10,
+            ) / 10
           : 100,
     });
 
@@ -248,6 +278,15 @@ export class PoliciesService {
       throw new NotFoundException(`Policy with id ${id} not found`);
     }
     return policy;
+  }
+
+  async findByPersonId(personId: string): Promise<Policy[]> {
+    return this.policyModel
+      .find({ person: personId })
+      .select('policyNumber carrier effectiveDate expirationDate salesAgent')
+      .populate('salesAgent', 'name')
+      .lean()
+      .exec();
   }
 
   async update(id: string, updatePolicyDto: UpdatePolicyDto): Promise<Policy> {
