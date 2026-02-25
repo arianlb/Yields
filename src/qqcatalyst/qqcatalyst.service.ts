@@ -509,7 +509,7 @@ export class QqcatalystService {
         }
         const personId = existingPerson[0]._id.toString();
 
-        if (policyDto.qqPriorPolicyId && policyDto.Status !== 'D')
+        if (policyDto.qqPriorPolicyId && policyDto.status !== 'D')
           {
           //Si la poliza es un Renewal, se busca la póliza anterior para marcarla como renovada en caso de que tenga Binder Date,
           //si no tiene Binder Date no se marca como renovada porque no se ha llegado a renovar realmente, porque es una poliza que creo el sistema de manera automática.
@@ -531,7 +531,7 @@ export class QqcatalystService {
         });
         if (existingPolicy) {
           // Si la póliza ya existe, actualizarla
-          if (policyDto.Status !== 'D') {
+          if (policyDto.status !== 'D') {
             
             //Si la poliza ya existe y se le quita el PriorPolicyId, y esa poliza es un Renewal, se marca como no renovada la poliza anterior, siempre y cuando no exista otra renovación de esa misma póliza anterior.
             if (existingPolicy.qqPriorPolicyId && !policyDto.qqPriorPolicyId && (await this.isPolicyRenewal(policyDto.qqPolicyId)).isRenewal) {
@@ -604,7 +604,7 @@ export class QqcatalystService {
             this.webSocketGateway.emitChangePolicy(payload);
           }
         } else {
-          if (policyDto.Status !== 'D' && policyDto.Status !== 'P') {
+          if (policyDto.status !== 'D' && policyDto.status !== 'P') {
             const newPolicy = await this.policiesService.create({
               ...policyDto,
               person: personId,
