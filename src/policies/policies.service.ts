@@ -89,7 +89,7 @@ export class PoliciesService {
       );
       policySearchCriteriaDto.effectiveDate = effectiveDateUtc;
     }
-    return this.policyModel.find(policySearchCriteriaDto).lean().exec();
+    return this.policyModel.find(policySearchCriteriaDto).populate('person', 'name phone').lean().exec();
   }
 
   async findByExpirationDate(
