@@ -79,7 +79,7 @@ export class PoliciesService {
           office: person.office,
         })
       ).populate('person', 'name phone')
-    ).populate('assignedAgent', 'name');
+    ).populate('salesAgent', 'name');
   }
 
   async findByQuery(policySearchCriteriaDto: PolicySearchCriteriaDto) {
@@ -89,7 +89,7 @@ export class PoliciesService {
       );
       policySearchCriteriaDto.effectiveDate = effectiveDateUtc;
     }
-    return this.policyModel.find(policySearchCriteriaDto).populate('person', 'name phone').lean().exec();
+    return this.policyModel.find(policySearchCriteriaDto).populate('person', 'name phone').populate('salesAgent', 'name').lean().exec();
   }
 
   async findByExpirationDate(
