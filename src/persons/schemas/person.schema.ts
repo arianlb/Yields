@@ -5,7 +5,7 @@ import { Office } from '../../offices/schemas/office.schema';
 
 @Schema()
 export class Person {
-  @Prop()
+  @Prop({ index: { sparse: true } })
   name: string;
 
   @Prop()

@@ -126,7 +126,17 @@ export class PersonsService {
       searchCriteriaDto.name = this.capitalizeFirstLetter(
         searchCriteriaDto.name,
       );
+
+      return this.personModel
+        .find({
+          ...searchCriteriaDto,
+          name: { $regex: searchCriteriaDto.name },
+        })
+        .populate('agent', 'name')
+        .lean()
+        .exec();
     }
+    
     return this.personModel
       .find(searchCriteriaDto)
       .populate('agent', 'name')
