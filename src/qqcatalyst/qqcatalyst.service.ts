@@ -476,7 +476,7 @@ export class QqcatalystService {
       `${this.apiURL}Policies/${policyId}/Adjustments`,
       'PolicyAdjustments',
     );
-    const cancellationAdjustment = data.find(
+    const cancellationAdjustment = data.findLast(
       (adjustment) => adjustment.AdjustmentType === 'C',
     );
     return cancellationAdjustment
