@@ -48,7 +48,7 @@ import { WebSocketsGateway } from '../web-sockets/web-sockets.gateway';
           process.env.QQCATALYST_CLIENT_ID_A,
           process.env.QQCATALYST_CLIENT_SECRET_A,
           process.env.QQCATALYST_USER_A,
-          process.env.QQCATALYST_PASSWORD,
+          process.env.QQCATALYST_PASSWORD_A,
           '89',
         );
       },
@@ -74,7 +74,7 @@ import { WebSocketsGateway } from '../web-sockets/web-sockets.gateway';
           process.env.QQCATALYST_CLIENT_ID_B,
           process.env.QQCATALYST_CLIENT_SECRET_B,
           process.env.QQCATALYST_USER_B,
-          process.env.QQCATALYST_PASSWORD,
+          process.env.QQCATALYST_PASSWORD_B,
           '117',
         );
       },

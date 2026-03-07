@@ -283,7 +283,7 @@ export class PoliciesService {
   async findByPersonId(personId: string): Promise<Policy[]> {
     return this.policyModel
       .find({ person: personId })
-      .select('policyNumber carrier effectiveDate expirationDate salesAgent')
+      .select('policyNumber carrier effectiveDate expirationDate salesAgent status')
       .populate('salesAgent', 'name')
       .lean()
       .exec();
