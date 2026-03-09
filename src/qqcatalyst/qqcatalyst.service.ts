@@ -745,8 +745,16 @@ export class QqcatalystService {
 
   async handlePreWorkTask() {
     this.logger.log('Executing pre-work QQCatalyst task');
-    this.offices = await this.getOffices();
-    this.users = await this.getUsersByOffice(this.offices);
+    try {
+      this.offices = await this.getOffices();
+      this.users = await this.getUsersByOffice(this.offices);
+
+      for (const office of this.offices) {
+        this.policiesService.toExpirePolicies(office._id, new Date());
+      }
+    } catch (error) {
+      this.logger.error('Error in pre-work QQCatalyst task:', error);
+    }
   }
 
   async handleFiveMinuteTask() {
@@ -774,16 +782,20 @@ export class QqcatalystService {
     this.logger.log('Executing midnight daily QQCatalyst task');
     const startDate = this.todayInTimeZone('America/New_York', 0);
     const endDate = this.todayInTimeZone('Etc/UTC', 1);
+    try {
+      this.contactCacheList = [];
+      const result = await this.contactsProcessing({ startDate, endDate });
+      this.logger.log(result);
+      this.policiesCacheList = [];
+      const policiesResult = await this.policiesProcessing({
+        startDate,
+        endDate,
+      });
+      this.logger.log(policiesResult);
+    } catch (error) {
+      this.logger.error('Error in midnight daily QQCatalyst task:', error);
+    }
     this.contactCacheList = [];
-    const result = await this.contactsProcessing({ startDate, endDate });
-    this.logger.log(result);
-    this.contactCacheList = [];
-    this.policiesCacheList = [];
-    const policiesResult = await this.policiesProcessing({
-      startDate,
-      endDate,
-    });
-    this.logger.log(policiesResult);
     this.policiesCacheList = [];
   }
 }

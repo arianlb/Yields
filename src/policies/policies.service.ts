@@ -384,6 +384,24 @@ export class PoliciesService {
       .exec();
   }
 
+  async toExpirePolicies(officeId: string, date: Date) {
+    date = this.datetimeService.dateToUtcDay(date);
+    const policies = await this.policyModel.find({
+      expirationDate: date,
+      office: officeId,
+      status: 'A',
+    }).select('_id').lean().exec();
+
+    if (policies.length > 0) {
+      this.policyModel.updateMany(
+        { _id: { $in: policies } },
+        { $set: { status: 'E' } },
+      ).exec();
+    }
+
+    return `${policies.length} policies were marked as expired`;
+  }
+
   async remove(id: string): Promise<string> {
     const policy = await this.policyModel.findByIdAndDelete(id).lean().exec();
     if (!policy) {
