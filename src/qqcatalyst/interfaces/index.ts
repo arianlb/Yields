@@ -14,3 +14,4 @@ export {
   PolicyResponse,
 } from './policies-list.interface';
 export { PolicyAdjustmentsResponse } from './policy-adjustments.interface';
+export { EmployeeInfoResponse } from './employee-info.interface';

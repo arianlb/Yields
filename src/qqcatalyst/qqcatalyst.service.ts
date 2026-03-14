@@ -6,7 +6,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { QqDateSearchDto } from './dto/qq-date-search.dto';
 import { PolicyNumbersDto } from './dto/policy-numbers.dto';
-import { ContactResponse, PolicyResponse } from './interfaces';
+import { ContactResponse, EmployeeInfoResponse, PolicyResponse } from './interfaces';
 import { OfficesService } from '../offices/offices.service';
 import { UsersService } from '../users/users.service';
 import { PersonsService } from '../persons/persons.service';
@@ -734,6 +734,63 @@ export class QqcatalystService {
     return validStatuses.includes(status);
   }
 
+  /// Trabajo con Empleados
+  async employeesProcessing(qqOfficeId: number) {
+    const { Data, TotalItems } = await this.getQQCatalystRequest(
+      `${this.apiURL}Search/Employees/BasicSearch?locationID=${qqOfficeId}&status=A&pageSize=100&pageNumber=1`,
+      'EmployeesByOffice',
+    );
+    if (TotalItems > 100) {
+      const totalPages = Math.ceil(TotalItems / 100);
+      for (let page = 2; page <= totalPages; page++) {
+        const pageData = await this.getQQCatalystRequest(
+          `${this.apiURL}Search/Employees/BasicSearch?locationID=${qqOfficeId}&status=A&pageSize=100&pageNumber=${page}`,
+          'EmployeesByOffice',
+        );
+        Data.push(...pageData.Data);
+      }
+    }
+    // Procesar los empleados
+    await this.checkEmployees(Data, qqOfficeId);
+
+  }
+
+  async checkEmployees(employees: EmployeeInfoResponse[], qqOfficeId: number) {
+    for (const employee of employees) {
+      if (!await this.userExists(employee)) {
+        await this.usersService.create({
+          name: employee.DisplayName,
+          email: employee.Email,
+          password: Math.random().toString(36).slice(-8),
+          offices: [this.offices.find((office) => office.qqOfficeId === qqOfficeId)?._id],
+          roles: ['ROLE_USER'],
+          qqUserId: employee.EntityID,
+        });
+      }
+    }
+  }
+
+  async userExists(employee: any) {
+    for (const user of this.users) {
+      if (user.name !== employee.DisplayName && user.email === employee.Email) {
+        await this.usersService.update(user._id.toString(), {
+          name: employee.DisplayName,
+          qqUserId: employee.EntityID,
+        });
+        return true;
+      }
+      else if (user.name === employee.DisplayName) {
+        if (user.qqUserId !== employee.EntityID) {
+          await this.usersService.update(user._id.toString(), {
+            qqUserId: employee.EntityID,
+          });
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Utilidades de zona horaria para las tareas programadas
 
   private todayInTimeZone(tz: string, extraDays: number): string {
@@ -748,10 +805,12 @@ export class QqcatalystService {
     try {
       this.offices = await this.getOffices();
       this.users = await this.getUsersByOffice(this.offices);
-
+      
       for (const office of this.offices) {
         this.policiesService.toExpirePolicies(office._id, new Date());
+        await this.employeesProcessing(office.qqOfficeId);
       }
+      this.users = await this.getUsersByOffice(this.offices);
     } catch (error) {
       this.logger.error('Error in pre-work QQCatalyst task:', error);
     }

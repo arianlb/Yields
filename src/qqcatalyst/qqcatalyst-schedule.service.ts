@@ -11,7 +11,7 @@ export class QqcatalystScheduleService {
     private readonly qqcatalystServiceB: QqcatalystService,
   ) {}
 
-  @Cron('0 58 7 * * 1-6', {
+  @Cron('0 55 7 * * 1-6', {
     name: 'preWorkQQCatalystTask',
     timeZone: 'America/New_York',
   })
@@ -35,7 +35,7 @@ export class QqcatalystScheduleService {
     this.qqcatalystServiceA.handleDailyTask();
   }
 
-  @Cron('0 59 7 * * 1-6', {
+  @Cron('0 57 7 * * 1-6', {
     name: 'preWorkQQCatalystTask117',
     timeZone: 'America/New_York',
   })

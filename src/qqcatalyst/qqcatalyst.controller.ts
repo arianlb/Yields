@@ -49,4 +49,16 @@ export class QqcatalystController {
   insertPolicyManuallyB(@Body() policyNumbersDto: PolicyNumbersDto) {
     return this.qqcatalystServiceB.insertPolicyManually(policyNumbersDto);
   }
+
+  @Auth()
+  @Get('/employees')
+  processEmployees() {
+    return this.qqcatalystService.handlePreWorkTask();
+  }
+  
+  @Auth()
+  @Get('/employees-b')
+  processEmployeesB() {
+    return this.qqcatalystServiceB.handlePreWorkTask();
+  }
 }
