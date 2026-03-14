@@ -387,7 +387,7 @@ export class PoliciesService {
   async toExpirePolicies(officeId: string, date: Date) {
     date = this.datetimeService.dateToUtcDay(date);
     const policies = await this.policyModel.find({
-      expirationDate: date,
+      expirationDate: { $lte: date },
       office: officeId,
       status: 'A',
     }).select('_id').lean().exec();

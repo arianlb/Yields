@@ -1,17 +1,20 @@
 import { Controller, Get, Post, Body, HttpCode } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { Auth } from './decorators/auth.decorator';
 import { GetUser } from './decorators/get-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
+import { ValidRoles } from './interfaces/valid-roles';
 import {
   ChangePasswordDto,
   EmailUserDto,
   LoginUserDto,
   ResetPasswordDto,
+  SetPasswordDto,
 } from './dto';
 
 @ApiTags('Auth')
+@ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -46,8 +49,9 @@ export class AuthController {
     @GetUser() user: UserDocument,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
-    return this.authService.resetPassword(user, resetPasswordDto.newPassword);
+    return this.authService.setPassword(user._id.toString(), resetPasswordDto.newPassword);
   }
+  
   @Post('change-password')
   @HttpCode(200)
   @Auth()
@@ -57,4 +61,14 @@ export class AuthController {
   ) {
     return this.authService.changePassword(user, changePasswordDto);
   }
+
+  @Post('set-password')
+  @HttpCode(200)
+  @Auth(ValidRoles.admin)
+  async setPassword(
+    @Body() setPasswordDto: SetPasswordDto,
+  ) {
+    return this.authService.setPassword(setPasswordDto.userId, setPasswordDto.password);
+  }
+
 }

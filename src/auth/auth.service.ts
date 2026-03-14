@@ -63,11 +63,11 @@ export class AuthService {
     return 'Email sent';
   }
 
-  async resetPassword(
-    { _id }: UserDocument,
+  async setPassword(
+    userId: string,
     newPassword: string,
   ): Promise<string> {
-    const user = await this.userModel.findById(_id).select('+password').exec();
+    const user = await this.userModel.findById(userId).select('+password').exec();
     if (!user) {
       throw new BadRequestException('User not found');
     }
