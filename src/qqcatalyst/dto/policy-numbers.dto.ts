@@ -6,4 +6,9 @@ export class PolicyNumbersDto {
   @IsArray()
   @IsString({ each: true })
   readonly policyNumbers: string[];
+  
+  @ApiProperty()
+  @IsArray()
+  @IsString({ each: true })
+  readonly validStatuses: string[];
 }

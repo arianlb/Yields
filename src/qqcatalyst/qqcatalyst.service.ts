@@ -361,7 +361,7 @@ export class QqcatalystService {
 
   /// Trabajo con Polizas
 
-  async insertPolicyManually({ policyNumbers }: PolicyNumbersDto) {
+  async insertPolicyManually({ policyNumbers, validStatuses }: PolicyNumbersDto) {
     if (!this.accessToken) {
       this.accessToken = await this.getAccessToken();
     }
@@ -371,14 +371,34 @@ export class QqcatalystService {
     };
 
     try {
-      const policiesToSave = await this.httpService.axiosRef.post(
+      const policiesFound = await this.httpService.axiosRef.post(
         `${this.apiURL}Policies/SearchByPolicyNumbers`,
         policyNumbers,
         { headers },
       );
-      const policies = policiesToSave.data.PoliciesFound.filter((policy) =>
-        this.isValidStatus(policy.Status),
+      const filteredPolicies = policiesFound.data.PoliciesFound.filter((policy) =>
+        validStatuses.includes(policy.Status),
       );
+      const policies = []
+      for (const policy of filteredPolicies) {
+        const { data } = await this.httpService.axiosRef.get(`${this.apiURL}PolicySummaryForApi?policyID=${policy.PolicyId}`, { headers });
+        policies.push(
+          {
+            PolicyId: data.PolicyID,
+            PolicyNumber: data.PolicyNo,
+            EffectiveDate: data.EffectiveDate,
+            ExpirationDate: data.ExpirationDate,
+            Status: data.Status,
+            WritingCarrier: data.WritingCarrier,
+            LOB: data.LOB,
+            TotalPremium: data.TotalPremium,
+            AgentName: data.AgentName,
+            CustomerId: data.CustomerID,
+            CustomerName: data.CustomerName,
+            PriorPolicyID: data.PriorPolicyID
+          }
+        );
+      }
       const preparedPolicies = await this.preparePoliciesData(policies);
       return this.savePoliciesData(preparedPolicies);
     } catch (error) {

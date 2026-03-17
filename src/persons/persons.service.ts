@@ -176,7 +176,6 @@ export class PersonsService {
   }
 
   private capitalizeFirstLetter(str: string): string {
-    str = str.toLowerCase();
-    return str.replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return str.trim().replace(/\s+/g, ' ').toLocaleLowerCase().replace(/(^|\s)\p{L}/gu, (letter) => letter.toUpperCase());
   }
 }
