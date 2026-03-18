@@ -11,7 +11,7 @@ export class QqcatalystScheduleService {
     private readonly qqcatalystServiceB: QqcatalystService,
   ) {}
 
-  @Cron('0 55 7 * * 1-6', {
+  @Cron('0 55 6 * * 1-6', {
     name: 'preWorkQQCatalystTask',
     timeZone: 'America/New_York',
   })
@@ -19,7 +19,7 @@ export class QqcatalystScheduleService {
     this.qqcatalystServiceA.handlePreWorkTask();
   }
 
-  @Cron('0 */5 8-18 * * 1-6', {
+  @Cron('0 */5 7-21 * * 1-6', {
     name: 'fiveMinutesQQCatalystTask',
     timeZone: 'America/New_York',
   })
@@ -35,7 +35,7 @@ export class QqcatalystScheduleService {
     this.qqcatalystServiceA.handleDailyTask();
   }
 
-  @Cron('0 57 7 * * 1-6', {
+  @Cron('0 57 6 * * 1-6', {
     name: 'preWorkQQCatalystTask117',
     timeZone: 'America/New_York',
   })
@@ -43,7 +43,7 @@ export class QqcatalystScheduleService {
     this.qqcatalystServiceB.handlePreWorkTask();
   }
 
-  @Cron('10 */7 8-18 * * 1-6', {
+  @Cron('10 */7 7-21 * * 1-6', {
     name: 'fiveMinutesQQCatalystTask117',
     timeZone: 'America/New_York',
   })
